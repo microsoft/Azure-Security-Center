@@ -1,4 +1,3 @@
-
 #region ------------Internal Functions-------------------
 function Set-Vars {
     $Script:asc_clientId = "1950a258-227b-4e31-a9cf-717495945fc2"              # Well-known client ID for Azure PowerShell
@@ -9,11 +8,6 @@ function Set-Vars {
     $Script:version = $asc_version
     }
 function Set-Context {
-    [CmdletBinding()]
-    Param
-    (
-    )
-    Begin {
     if(-not (Get-Module AzureRm.Profile)) {
         Import-Module AzureRm.Profile
         }
@@ -47,124 +41,120 @@ function Set-Context {
     #2.x AzureRM outputs subscriptionid differently.
     if($azureRmProfileModuleVersion.Major -le 2) {Set-Variable -Name asc_subscriptionId -Scope Script -Value $currentAzureContext.Subscription.SubscriptionId}
     else{Set-Variable -Name asc_subscriptionId -Scope Script -Value $currentAzureContext.Subscription.Id}
-    }
-
 }
 #endregion
+
 <#
 .Synopsis
-   Build-ASCJSON creates the JSON format needed for Set-ASCPolicy.
+Build-ASCJSON creates the JSON format needed for Set-ASCPolicy.
 .DESCRIPTION
-   When running the command, it will perform a GET request for your existing ASC policy configuraiton and will only update parameters you specify. The command currently has parameters for JIT Port Administration configuration, but the JIT commands are not currently in the module. These will be added later.
+When running the command, it will perform a GET request for your existing ASC policy configuraiton and will only update parameters you specify. The command currently has parameters for JIT Port Administration configuration, but the JIT commands are not currently in the module. These will be added later.
 .EXAMPLE
-   Build-ASCJSON -Type Policy -PolicyName Default
+Build-ASCJSON -Type Policy -PolicyName Default
 
 {
-    "properties":  {
-                       "policyLevel":  "Subscription",
-                       "name":  "default",
-                       "unique":  "Off",
-                       "logCollection":  "On",
-                       "recommendations":  {
-                                               "patch":  "On",
-                                               "baseline":  "On",
-                                               "antimalware":  "On",
-                                               "diskEncryption":  "On",
-                                               "acls":  "On",
-                                               "nsgs":  "On",
-                                               "waf":  "On",
-                                               "sqlAuditing":  "On",
-                                               "sqlTde":  "On",
-                                               "ngfw":  "On",
-                                               "vulnerabilityAssessment":  "On",
-                                               "storageEncryption":  "On",
-                                               "jitNetworkAccess":  "On"
-                                           },
-                       "logsConfiguration":  {
-                                                 "storages":  {
+"properties":  {
+                    "policyLevel":  "Subscription",
+                    "name":  "default",
+                    "unique":  "Off",
+                    "logCollection":  "On",
+                    "recommendations":  {
+                                            "patch":  "On",
+                                            "baseline":  "On",
+                                            "antimalware":  "On",
+                                            "diskEncryption":  "On",
+                                            "acls":  "On",
+                                            "nsgs":  "On",
+                                            "waf":  "On",
+                                            "sqlAuditing":  "On",
+                                            "sqlTde":  "On",
+                                            "ngfw":  "On",
+                                            "vulnerabilityAssessment":  "On",
+                                            "storageEncryption":  "On",
+                                            "jitNetworkAccess":  "On"
+                                        },
+                    "logsConfiguration":  {
+                                                "storages":  {
 
-                                                              }
-                                             },
-                       "omsWorkspaceConfiguration":  {
-                                                         "workspaces":  {
+                                                            }
+                                            },
+                    "omsWorkspaceConfiguration":  {
+                                                        "workspaces":  {
 
-                                                                        }
-                                                     },
-                       "securityContactConfiguration":  {
-                                                            "securityContactEmails":  [
-                                                                                          "mike.kassis@microsoft.com",
-                                                                                          "hello@world.com"
-                                                                                      ],
-                                                            "securityContactPhone":  "867-5309",
-                                                            "areNotificationsOn":  true,
-                                                            "sendToAdminOn":  false
-                                                        },
-                       "pricingConfiguration":  {
-                                                    "selectedPricingTier":  "Free",
-                                                    "standardTierStartDate":  "0001-01-01T00:00:00",
-                                                    "premiumTierStartDate":  "0001-01-01T00:00:00"
-                                                },
-                       "lastStorageCreationTime":  "1970-01-01T00:00:00Z"
-                   }
+                                                                    }
+                                                    },
+                    "securityContactConfiguration":  {
+                                                        "securityContactEmails":  [
+                                                                                        "mike.kassis@microsoft.com",
+                                                                                        "hello@world.com"
+                                                                                    ],
+                                                        "securityContactPhone":  "867-5309",
+                                                        "areNotificationsOn":  true,
+                                                        "sendToAdminOn":  false
+                                                    },
+                    "pricingConfiguration":  {
+                                                "selectedPricingTier":  "Free",
+                                                "standardTierStartDate":  "0001-01-01T00:00:00",
+                                                "premiumTierStartDate":  "0001-01-01T00:00:00"
+                                            },
+                    "lastStorageCreationTime":  "1970-01-01T00:00:00Z"
+                }
 }
 
-    The above example simply shows the existing configuration for the specified policy.
-
+The above example simply shows the existing configuration for the specified policy.
 .EXAMPLE
-   Build-ASCJSON -Type Policy -PolicyName Default -AllOff -LogCollection Off -SecurityContactEmail "bin@bash.com","bash@bin.com"
+Build-ASCJSON -Type Policy -PolicyName Default -AllOff -LogCollection Off -SecurityContactEmail "bin@bash.com","bash@bin.com"
 
 {
-    "properties":  {
-                       "policyLevel":  "Subscription",
-                       "name":  "default",
-                       "unique":  "Off",
-                       "logCollection":  "Off",
-                       "recommendations":  {
-                                               "patch":  "Off",
-                                               "baseline":  "Off",
-                                               "antimalware":  "Off",
-                                               "diskEncryption":  "Off",
-                                               "acls":  "Off",
-                                               "nsgs":  "Off",
-                                               "waf":  "Off",
-                                               "sqlAuditing":  "Off",
-                                               "sqlTde":  "Off",
-                                               "ngfw":  "Off",
-                                               "vulnerabilityAssessment":  "Off",
-                                               "storageEncryption":  "Off",
-                                               "jitNetworkAccess":  "Off"
-                                           },
-                       "logsConfiguration":  {
-                                                 "storages":  {
+"properties":  {
+                    "policyLevel":  "Subscription",
+                    "name":  "default",
+                    "unique":  "Off",
+                    "logCollection":  "Off",
+                    "recommendations":  {
+                                            "patch":  "Off",
+                                            "baseline":  "Off",
+                                            "antimalware":  "Off",
+                                            "diskEncryption":  "Off",
+                                            "acls":  "Off",
+                                            "nsgs":  "Off",
+                                            "waf":  "Off",
+                                            "sqlAuditing":  "Off",
+                                            "sqlTde":  "Off",
+                                            "ngfw":  "Off",
+                                            "vulnerabilityAssessment":  "Off",
+                                            "storageEncryption":  "Off",
+                                            "jitNetworkAccess":  "Off"
+                                        },
+                    "logsConfiguration":  {
+                                                "storages":  {
 
-                                                              }
-                                             },
-                       "omsWorkspaceConfiguration":  {
-                                                         "workspaces":  {
+                                                            }
+                                            },
+                    "omsWorkspaceConfiguration":  {
+                                                        "workspaces":  {
 
-                                                                        }
-                                                     },
-                       "securityContactConfiguration":  {
-                                                            "securityContactEmails":  [
-                                                                                          "bin@bash.com",
-                                                                                          "bash@bin.com"
-                                                                                      ],
-                                                            "securityContactPhone":  "867-5309",
-                                                            "areNotificationsOn":  true,
-                                                            "sendToAdminOn":  false
-                                                        },
-                       "pricingConfiguration":  {
-                                                    "selectedPricingTier":  "Free",
-                                                    "standardTierStartDate":  "0001-01-01T00:00:00",
-                                                    "premiumTierStartDate":  "0001-01-01T00:00:00"
-                                                },
-                       "lastStorageCreationTime":  "1970-01-01T00:00:00Z"
-                   }
+                                                                    }
+                                                    },
+                    "securityContactConfiguration":  {
+                                                        "securityContactEmails":  [
+                                                                                        "bin@bash.com",
+                                                                                        "bash@bin.com"
+                                                                                    ],
+                                                        "securityContactPhone":  "867-5309",
+                                                        "areNotificationsOn":  true,
+                                                        "sendToAdminOn":  false
+                                                    },
+                    "pricingConfiguration":  {
+                                                "selectedPricingTier":  "Free",
+                                                "standardTierStartDate":  "0001-01-01T00:00:00",
+                                                "premiumTierStartDate":  "0001-01-01T00:00:00"
+                                            },
+                    "lastStorageCreationTime":  "1970-01-01T00:00:00Z"
+                }
 }
 
-    The above example builds a policy that turns all recommendations off and log collection off and changes the security contact to "bin@bash.com" and "bash@bin.com"
-
-
+The above example builds a policy that turns all recommendations off and log collection off and changes the security contact to "bin@bash.com" and "bash@bin.com"
 #>
 function Build-ASCJSON {
     [CmdletBinding()]
@@ -485,44 +475,44 @@ function Build-ASCJSON {
 }
 <#
 .Synopsis
-   Get-ASCPolicy
+Get-ASCPolicy
 .DESCRIPTION
-   Get-ASCPolicy is used to retrieve either a list of set policies or a specific policy for a specified resource.
+Get-ASCPolicy is used to retrieve either a list of set policies or a specific policy for a specified resource.
 .EXAMPLE
-   Get-ASCPolicy | Format-List
+Get-ASCPolicy | Format-List
 
 
-    id         : /subscriptions/<subscriptionId>/providers/Microsoft.Security/policies/policy1
-    name       : default
-    type       : Microsoft.Security/policies
-    properties : @{policyLevel=Subscription; name=Default; unique=Off; logCollection=On; recommendations=; logsConfiguration=; omsWorkspaceConfiguration=; securityContactConfiguration=;
-                 pricingConfiguration=}
+id         : /subscriptions/<subscriptionId>/providers/Microsoft.Security/policies/policy1
+name       : default
+type       : Microsoft.Security/policies
+properties : @{policyLevel=Subscription; name=Default; unique=Off; logCollection=On; recommendations=; logsConfiguration=; omsWorkspaceConfiguration=; securityContactConfiguration=;
+                pricingConfiguration=}
 
-    id         : /subscriptions/<subscriptionId>/providers/Microsoft.Security/policies/policy2
-    name       : default
-    type       : Microsoft.Security/policies
-    properties : @{policyLevel=Subscription; name=policy2; unique=On; logCollection=On; recommendations=; logsConfiguration=; omsWorkspaceConfiguration=; securityContactConfiguration=;
-                 pricingConfiguration=}
+id         : /subscriptions/<subscriptionId>/providers/Microsoft.Security/policies/policy2
+name       : default
+type       : Microsoft.Security/policies
+properties : @{policyLevel=Subscription; name=policy2; unique=On; logCollection=On; recommendations=; logsConfiguration=; omsWorkspaceConfiguration=; securityContactConfiguration=;
+                pricingConfiguration=}
 
-   Fetches details for all policies.
+Fetches details for all policies.
 .EXAMPLE
-   (Get-ASCPolicy -PolicyName default).properties.recommendations
+(Get-ASCPolicy -PolicyName default).properties.recommendations
 
-    patch                   : On
-    baseline                : On
-    antimalware             : On
-    diskEncryption          : On
-    acls                    : On
-    nsgs                    : On
-    waf                     : On
-    sqlAuditing             : On
-    sqlTde                  : On
-    ngfw                    : On
-    vulnerabilityAssessment : On
-    storageEncryption       : On
-    jitNetworkAccess        : On
+patch                   : On
+baseline                : On
+antimalware             : On
+diskEncryption          : On
+acls                    : On
+nsgs                    : On
+waf                     : On
+sqlAuditing             : On
+sqlTde                  : On
+ngfw                    : On
+vulnerabilityAssessment : On
+storageEncryption       : On
+jitNetworkAccess        : On
 
-   The above example fetches default policy and displays the current recommendations settings.
+The above example fetches default policy and displays the current recommendations settings.
 #>
 function Get-ASCPolicy {
     [CmdletBinding()]
@@ -574,7 +564,7 @@ function Get-ASCPolicy {
                         $asc_request
                     }
             }
-        If ($PolicyName -and $Baseline) #Placeholder for when baselines get added {
+        If ($PolicyName -and $Baseline) {
                 $asc_uri = "https://$asc_url/subscriptions/$asc_subscriptionId/providers/microsoft.Security/$asc_endpoint/$PolicyName/baselineConfigurations$asc_APIVersion"
                 Try {
                         Write-Verbose "Retrieving data for $PolicyName..."
@@ -593,19 +583,19 @@ function Get-ASCPolicy {
 }
 <#
 .Synopsis
-   Set-ASCPolicy is used to update the current protection policy for your active subscription.
+Set-ASCPolicy is used to update the current protection policy for your active subscription.
 .DESCRIPTION
-   This cmdlet currently only works for the default policy in your active subscription. To change your active subscription either re-run Get-ASCCredential and select the desired subscription from the list, or run ($asc_subscriptionId = <your subscription id>) to change the global variable used by this module.
+This cmdlet currently only works for the default policy in your active subscription. To change your active subscription either re-run Get-ASCCredential and select the desired subscription from the list, or run ($asc_subscriptionId = <your subscription id>) to change the global variable used by this module.
 .EXAMPLE
-   Set-ASCPolicy -PolicyName default -JSON (Build-ASCJSON -Policy -DataCollection On -SecurityContactEmail hello@world.com, bin@bash.com)
+Set-ASCPolicy -PolicyName default -JSON (Build-ASCJSON -Policy -DataCollection On -SecurityContactEmail hello@world.com, bin@bash.com)
 
-   The above example uses the Set-ASCPolicy cmdlet against the default policy for the active subscriptionId and passes in the JSON configuration by running Build-ASCJSON within parentheses.
+The above example uses the Set-ASCPolicy cmdlet against the default policy for the active subscriptionId and passes in the JSON configuration by running Build-ASCJSON within parentheses.
 
-   The Build-ASCJSON parameters specified will turn on data collection and replace the existing security contact email addresses with two new addresses.
+The Build-ASCJSON parameters specified will turn on data collection and replace the existing security contact email addresses with two new addresses.
 
-   The command should return a StatusCode: 200 (OK)
+The command should return a StatusCode: 200 (OK)
 
-   You can verify your updated configuration by running Get-ASCPolicy.
+You can verify your updated configuration by running Get-ASCPolicy.
 #>
 function Set-ASCPolicy {
     [CmdletBinding()]
@@ -647,30 +637,30 @@ function Set-ASCPolicy {
 }
 <#
 .Synopsis
-   Get-ASCStatus retrieves the data collection status of all resources currently being protected in your active subscription.
+Get-ASCStatus retrieves the data collection status of all resources currently being protected in your active subscription.
 .DESCRIPTION
-   This cmdlet will display the monitoring health and status of your azure resources for the active subscription. This data is based on data collection being enabled for your resources which can be set in your policy.
+This cmdlet will display the monitoring health and status of your azure resources for the active subscription. This data is based on data collection being enabled for your resources which can be set in your policy.
 .EXAMPLE
-    (Get-ASCStatus | ?{$_.id -match 'Kali-01$'}).properties
+(Get-ASCStatus | ?{$_.id -match 'Kali-01$'}).properties
 
 
-    vmAgent                              : On
-    dataCollector                        : Off
-    dataCollectorInstallationStatus      : FailureDueToVmStopped
-    dataCollectorPolicy                  : On
-    antimalwareScannerData               : @{antimalwareInstallationSecurityState=None; antimalwareSupportLogCollectionSecurityState=None; antimalwareHealthIssuesSecurityState=None; antimalwareComponentList=System.Object[];
-                                           dataType=Antimalware; isScannerDataValid=False; policy=On; dataExists=False; securityState=None; lastReportTime=0001-01-01T00:00:00}
-    baselineScannerData                  : @{failedRulesSecurityState=None; dataType=Baseline; isScannerDataValid=False; policy=On; dataExists=False; securityState=None; lastReportTime=0001-01-01T00:00:00}
-    patchScannerData                     : @{rebootPendingSecurityState=None; missingPatchesSecurityState=None; dataType=Patch; isScannerDataValid=False; policy=On; dataExists=False; securityState=None;
-                                           lastReportTime=0001-01-01T00:00:00}
-    vmInstallationsSecurityState         : Medium
-    encryptionDataState                  : @{securityState=None; isSupported=False; isOsDiskEncrypted=False; isDataDiskEncrypted=False}
-    vulnerabilityAssessmentScannerStatus : @{isSupported=False; provider=Unknown; dataType=VulnerabilityAssessment; isScannerDataValid=False; policy=On; dataExists=False; securityState=None; lastReportTime=0001-01-01T00:00:00}
-    name                                 : VirtualMachineHealthStateProperties
-    type                                 : VirtualMachine
-    securityState                        : Medium
+vmAgent                              : On
+dataCollector                        : Off
+dataCollectorInstallationStatus      : FailureDueToVmStopped
+dataCollectorPolicy                  : On
+antimalwareScannerData               : @{antimalwareInstallationSecurityState=None; antimalwareSupportLogCollectionSecurityState=None; antimalwareHealthIssuesSecurityState=None; antimalwareComponentList=System.Object[];
+                                        dataType=Antimalware; isScannerDataValid=False; policy=On; dataExists=False; securityState=None; lastReportTime=0001-01-01T00:00:00}
+baselineScannerData                  : @{failedRulesSecurityState=None; dataType=Baseline; isScannerDataValid=False; policy=On; dataExists=False; securityState=None; lastReportTime=0001-01-01T00:00:00}
+patchScannerData                     : @{rebootPendingSecurityState=None; missingPatchesSecurityState=None; dataType=Patch; isScannerDataValid=False; policy=On; dataExists=False; securityState=None;
+                                        lastReportTime=0001-01-01T00:00:00}
+vmInstallationsSecurityState         : Medium
+encryptionDataState                  : @{securityState=None; isSupported=False; isOsDiskEncrypted=False; isDataDiskEncrypted=False}
+vulnerabilityAssessmentScannerStatus : @{isSupported=False; provider=Unknown; dataType=VulnerabilityAssessment; isScannerDataValid=False; policy=On; dataExists=False; securityState=None; lastReportTime=0001-01-01T00:00:00}
+name                                 : VirtualMachineHealthStateProperties
+type                                 : VirtualMachine
+securityState                        : Medium
 
-    The above example retrieves the data collection status for the Kali-O1 VM and displays the properties.
+The above example retrieves the data collection status for the Kali-O1 VM and displays the properties.
 #>
 function Get-ASCStatus {
     [CmdletBinding()]
@@ -704,29 +694,29 @@ function Get-ASCStatus {
 }
 <#
 .Synopsis
-   Get-ASCTask displays the current tasks in Azure Security Center.
+Get-ASCTask displays the current tasks in Azure Security Center.
 .DESCRIPTION
-   This cmdlet displays the available tasks for your resources in the active subscription. These tasks are based on your set recommendations set in your policy.
+This cmdlet displays the available tasks for your resources in the active subscription. These tasks are based on your set recommendations set in your policy.
 .EXAMPLE
-    (Get-ASCTask).properties.securitytaskparameters | select storageaccountname, name
+(Get-ASCTask).properties.securitytaskparameters | select storageaccountname, name
 
-    storageAccountName       name
-    ------------------       ----
-    defaultnetworkingdiag494 Enable encryption for Azure Storage Account
-                             VirtualMachinesNsgShouldRestrictTrafficTaskParameters
-                             VirtualMachinesNsgShouldRestrictTrafficTaskParameters
-                             ProvisionNgfw
-    w10x6401disks523         Enable encryption for Azure Storage Account
-                             NetworkSecurityGroupMissingOnSubnet
-                             NetworkSecurityGroupMissingOnSubnet
-    122193westus2            Enable encryption for Azure Storage Account
-                             EncryptionOnVm
-                             ProvisionNgfw
-                             UpgradePricingTierTaskParameters
-    defaultnetworking698     Enable encryption for Azure Storage Account
+storageAccountName       name
+------------------       ----
+defaultnetworkingdiag494 Enable encryption for Azure Storage Account
+                            VirtualMachinesNsgShouldRestrictTrafficTaskParameters
+                            VirtualMachinesNsgShouldRestrictTrafficTaskParameters
+                            ProvisionNgfw
+w10x6401disks523         Enable encryption for Azure Storage Account
+                            NetworkSecurityGroupMissingOnSubnet
+                            NetworkSecurityGroupMissingOnSubnet
+122193westus2            Enable encryption for Azure Storage Account
+                            EncryptionOnVm
+                            ProvisionNgfw
+                            UpgradePricingTierTaskParameters
+defaultnetworking698     Enable encryption for Azure Storage Account
 
 
-    The above example retrives the available tasks displays the relevant storage account and task name only.
+The above example retrives the available tasks displays the relevant storage account and task name only.
 #>
 function Get-ASCTask {
     [CmdletBinding()]
@@ -760,20 +750,19 @@ function Get-ASCTask {
 }
 <#
 .Synopsis
-   Set-ASCTask updates the status of a task
+Set-ASCTask updates the status of a task
 .DESCRIPTION
-   This cmdlet can be used to update task status to either dismiss or activate.
+This cmdlet can be used to update task status to either dismiss or activate.
 .EXAMPLE
-   Set-ASCTask -TaskID 09eb1b85-1b5b-c4b6-5ad3-b3c383b1a83d -Dismiss
+Set-ASCTask -TaskID 09eb1b85-1b5b-c4b6-5ad3-b3c383b1a83d -Dismiss
 
-   (Get-ASCTask).properties | select -first 1
+(Get-ASCTask).properties | select -first 1
 
-    state
-    -----
-    Dismissed
+state
+-----
+Dismissed
 
-   The first command marks the set task as dismissed. The second command checks the status of the updated task and displays the state.
-
+The first command marks the set task as dismissed. The second command checks the status of the updated task and displays the state.
 #>
 function Set-ASCTask {
     [CmdletBinding()]
@@ -811,7 +800,7 @@ function Set-ASCTask {
         $asc_APIVersion = "?api-version=$version" #Build version syntax.
     }
     Process {
-        If ($PSCmdlet.ParameterSetName -eq 'Dismiss') #Run this block if Dismiss flag is used {
+        If ($PSCmdlet.ParameterSetName -eq 'Dismiss') {
                 $asc_uri = "https://$asc_url/subscriptions/$asc_subscriptionId/providers/microsoft.Security/locations/centralus/$asc_endpoint/$TaskID/dismiss$asc_APIVersion"
                 Try {
                         $asc_request = Invoke-RestMethod -Uri $asc_uri -Method Post -Headers $asc_requestHeader
@@ -824,7 +813,7 @@ function Set-ASCTask {
                     }
             }
 
-        If ($PSCmdlet.ParameterSetName -eq 'Activate') #Run this block if Activate flag is used {
+        If ($PSCmdlet.ParameterSetName -eq 'Activate') {
                 $asc_uri = "https://$asc_url/subscriptions/$asc_subscriptionId/providers/microsoft.Security/locations/centralus/$asc_endpoint/$TaskID/activate$asc_APIVersion"
                 Try {
                         $asc_request = Invoke-RestMethod -Uri $asc_uri -Method Post -Headers $asc_requestHeader
@@ -842,26 +831,26 @@ function Set-ASCTask {
 }
 <#
 .Synopsis
-   Get-ASCAlert
+Get-ASCAlert
 .DESCRIPTION
-   This cmdlet receives a collection of alerts. Note, alerts are only avaible in Standart-tier subscriptions.
+This cmdlet receives a collection of alerts. Note, alerts are only avaible in Standart-tier subscriptions.
 .EXAMPLE
-    Get-ASCAlert | select -First 20 @{N='Alert';E={$_.properties.alertdisplayname}}
+Get-ASCAlert | select -First 20 @{N='Alert';E={$_.properties.alertdisplayname}}
 
-    Alert
-    -----
-    Potential SQL Injection
-    Deep Security Agent detected a malware
-    Possible outgoing spam activity detected
-    Modified system binary discovered in dump file 5bd767e4-2d08-4714-b744-aaed04b57107__391365252.hdmp
-    Security incident detected
-    Network communication with a malicious machine detected
-    Multiple Domain Accounts Queried
-    Suspicious SVCHOST process executed
-    Successful RDP brute force attack
-    Failed RDP Brute Force Attack
+Alert
+-----
+Potential SQL Injection
+Deep Security Agent detected a malware
+Possible outgoing spam activity detected
+Modified system binary discovered in dump file 5bd767e4-2d08-4714-b744-aaed04b57107__391365252.hdmp
+Security incident detected
+Network communication with a malicious machine detected
+Multiple Domain Accounts Queried
+Suspicious SVCHOST process executed
+Successful RDP brute force attack
+Failed RDP Brute Force Attack
 
-    The above command retrieves the last 20 alerts and shows them in a table, renaming the alertdisplayname property to 'Alert'.
+The above command retrieves the last 20 alerts and shows them in a table, renaming the alertdisplayname property to 'Alert'.
 #>
 
 function Get-ASCAlert {
@@ -914,11 +903,11 @@ function Get-ASCAlert {
 }
 <#
 .Synopsis
-   Set-ASCAlert changes the status of an alert.
+Set-ASCAlert changes the status of an alert.
 .DESCRIPTION
-   Changes the status of alerts.
+Changes the status of alerts.
 .EXAMPLE
-   <example>
+<example>
 #>
 function Set-ASCAlert {
     [CmdletBinding()]
@@ -998,34 +987,32 @@ function Set-ASCAlert {
 }
 <#
 .Synopsis
-   Get-ASCDataCollection
+Get-ASCDataCollection
 .DESCRIPTION
-   Retrieves data collection information around the specified resource.
+Retrieves data collection information around the specified resource.
 .EXAMPLE
-    PS C:\> Get-ASCDataCollection -ComputeType Compute -ResourceGroup CXP-MIKE -VM "2012R2-DC1" | fl -Force
+Get-ASCDataCollection -ComputeType Compute -ResourceGroup CXP-MIKE -VM "2012R2-DC1" | fl -Force
+
+id         : /subscriptions/6b1ceacd-5921-4780-8f96-2078ad96fd96/resourceGroups/CXP-MIKE/providers/Microsoft.Compute/virtualMachines/2012R2-DC1//providers/Micros
+                oft.Security/securityStatuses/Patch
+name       : Patch
+type       : Microsoft.Security/securityStatuses
+properties : @{missingPatches=System.Object[]; name=PatchSecurityDataProperties; type=Patch}
+
+id         : /subscriptions/6b1ceacd-5921-4780-8f96-2078ad96fd96/resourceGroups/CXP-MIKE/providers/Microsoft.Compute/virtualMachines/2012R2-DC1//providers/Micros
+                oft.Security/securityStatuses/Baseline
+name       : Baseline
+type       : Microsoft.Security/securityStatuses
+properties : @{failedBaselineRules=System.Object[]; name=BaselineSecurityDataProperties; type=Baseline}
+
+id         : /subscriptions/6b1ceacd-5921-4780-8f96-2078ad96fd96/resourceGroups/CXP-MIKE/providers/Microsoft.Compute/virtualMachines/2012R2-DC1//providers/Micros
+                oft.Security/securityStatuses/Antimalware
+name       : Antimalware
+type       : Microsoft.Security/securityStatuses
+properties : @{antimalwareScenarios=System.Object[]; name=AntimalwareSecurityDataProperties; type=Antimalware}
 
 
-    id         : /subscriptions/6b1ceacd-5921-4780-8f96-2078ad96fd96/resourceGroups/CXP-MIKE/providers/Microsoft.Compute/virtualMachines/2012R2-DC1//providers/Micros
-                 oft.Security/securityStatuses/Patch
-    name       : Patch
-    type       : Microsoft.Security/securityStatuses
-    properties : @{missingPatches=System.Object[]; name=PatchSecurityDataProperties; type=Patch}
-
-    id         : /subscriptions/6b1ceacd-5921-4780-8f96-2078ad96fd96/resourceGroups/CXP-MIKE/providers/Microsoft.Compute/virtualMachines/2012R2-DC1//providers/Micros
-                 oft.Security/securityStatuses/Baseline
-    name       : Baseline
-    type       : Microsoft.Security/securityStatuses
-    properties : @{failedBaselineRules=System.Object[]; name=BaselineSecurityDataProperties; type=Baseline}
-
-    id         : /subscriptions/6b1ceacd-5921-4780-8f96-2078ad96fd96/resourceGroups/CXP-MIKE/providers/Microsoft.Compute/virtualMachines/2012R2-DC1//providers/Micros
-                 oft.Security/securityStatuses/Antimalware
-    name       : Antimalware
-    type       : Microsoft.Security/securityStatuses
-    properties : @{antimalwareScenarios=System.Object[]; name=AntimalwareSecurityDataProperties; type=Antimalware}
-
-
-    The above example retrieves data collection information for the specified resource.
-
+The above example retrieves data collection information for the specified resource.
 #>
 function Get-ASCDataCollection {
     [CmdletBinding()]
@@ -1079,20 +1066,20 @@ function Get-ASCDataCollection {
 }
 <#
 .Synopsis
-   Get-ASCLocation
+Get-ASCLocation
 .DESCRIPTION
-   Retrieves data center location information for Azure Security Center data.
+Retrieves data center location information for Azure Security Center data.
 .EXAMPLE
-    PS C:\> Get-ASCLocation | fl -Force
+Get-ASCLocation | fl -Force
 
 
-    id         : /subscriptions/6b1ceacd-5731-4780-8f96-2078dd96fd96/providers/Microsoft.Security/locations/centralus
-    name       : centralus
-    type       : Microsoft.Security/locations
-    properties : @{homeRegionName=centralus}
+id         : /subscriptions/6b1ceacd-5731-4780-8f96-2078dd96fd96/providers/Microsoft.Security/locations/centralus
+name       : centralus
+type       : Microsoft.Security/locations
+properties : @{homeRegionName=centralus}
 
 
-    The above example retrieves datacenter region information for the ASC service.
+The above example retrieves datacenter region information for the ASC service.
 #>
 function Get-ASCLocation {
     [CmdletBinding()]
@@ -1126,36 +1113,36 @@ function Get-ASCLocation {
 }
 <#
 .Synopsis
-   Get-ASCSecuritySolutionReferenceData
+Get-ASCSecuritySolutionReferenceData
 .DESCRIPTION
-   Retrieves list of available partner solutions and their corrosponding information.
+Retrieves list of available partner solutions and their corrosponding information.
 .EXAMPLE
-    PS C:\> Get-ASCSecuritySolutionReferenceData | ?{$_.name -match 'barracuda'} | fl -Force
+Get-ASCSecuritySolutionReferenceData | ?{$_.name -match 'barracuda'} | fl -Force
 
 
-    id         : /subscriptions/6b1ceacd-5731-4780-8f96-2078dd96fd96/providers/Microsoft.Security/securitySolutionsReferenceData/barracudanetworks.wafbyol-ARM.FullyI
-                 ntegrated
-    name       : barracudanetworks.wafbyol-ARM.FullyIntegrated
-    type       : Microsoft.Security/securitySolutionsReferenceData
-    properties : @{alertVendorName=BarracudaWAF; securityFamily=Waf; packageInfoUrl=www.azure.com; productName=Web Application Firewall;
-                 provisionType=FullyIntegrated; publisher=barracudanetworks; publisherDisplayName=Barracuda Networks, Inc.; template=barracudanetworks/wafbyol-ARM}
+id         : /subscriptions/6b1ceacd-5731-4780-8f96-2078dd96fd96/providers/Microsoft.Security/securitySolutionsReferenceData/barracudanetworks.wafbyol-ARM.FullyI
+                ntegrated
+name       : barracudanetworks.wafbyol-ARM.FullyIntegrated
+type       : Microsoft.Security/securitySolutionsReferenceData
+properties : @{alertVendorName=BarracudaWAF; securityFamily=Waf; packageInfoUrl=www.azure.com; productName=Web Application Firewall;
+                provisionType=FullyIntegrated; publisher=barracudanetworks; publisherDisplayName=Barracuda Networks, Inc.; template=barracudanetworks/wafbyol-ARM}
 
-    id         : /subscriptions/6b1ceacd-5731-4780-8f96-2078dd96fd96/providers/Microsoft.Security/securitySolutionsReferenceData/barracudanetworks.wafbyol-ARM
-    name       : barracudanetworks.wafbyol-ARM
-    type       : Microsoft.Security/securitySolutionsReferenceData
-    properties : @{alertVendorName=BarracudaWAF; securityFamily=Waf; packageInfoUrl=www.azure.com; productName=Web Application Firewall;
-                 provisionType=SemiIntegrated; publisher=barracudanetworks; publisherDisplayName=Barracuda Networks, Inc.; template=barracudanetworks/wafbyol-ARM}
+id         : /subscriptions/6b1ceacd-5731-4780-8f96-2078dd96fd96/providers/Microsoft.Security/securitySolutionsReferenceData/barracudanetworks.wafbyol-ARM
+name       : barracudanetworks.wafbyol-ARM
+type       : Microsoft.Security/securitySolutionsReferenceData
+properties : @{alertVendorName=BarracudaWAF; securityFamily=Waf; packageInfoUrl=www.azure.com; productName=Web Application Firewall;
+                provisionType=SemiIntegrated; publisher=barracudanetworks; publisherDisplayName=Barracuda Networks, Inc.; template=barracudanetworks/wafbyol-ARM}
 
-    id         : /subscriptions/6b1ceacd-5731-4780-8f96-2078dd96fd96/providers/Microsoft.Security/securitySolutionsReferenceData/barracudanetworks.barracuda-ng-firew
-                 allbyol-ARM
-    name       : barracudanetworks.barracuda-ng-firewallbyol-ARM
-    type       : Microsoft.Security/securitySolutionsReferenceData
-    properties : @{alertVendorName=BarracudaNgfw; securityFamily=Ngfw; packageInfoUrl=www.azure.com; productName=Next Generation Firewall;
-                 provisionType=SemiIntegrated; publisher=barracudanetworks; publisherDisplayName=Barracuda Networks, Inc.;
-                 template=barracudanetworks/barracuda-ng-firewallbyol-ARM}
+id         : /subscriptions/6b1ceacd-5731-4780-8f96-2078dd96fd96/providers/Microsoft.Security/securitySolutionsReferenceData/barracudanetworks.barracuda-ng-firew
+                allbyol-ARM
+name       : barracudanetworks.barracuda-ng-firewallbyol-ARM
+type       : Microsoft.Security/securitySolutionsReferenceData
+properties : @{alertVendorName=BarracudaNgfw; securityFamily=Ngfw; packageInfoUrl=www.azure.com; productName=Next Generation Firewall;
+                provisionType=SemiIntegrated; publisher=barracudanetworks; publisherDisplayName=Barracuda Networks, Inc.;
+                template=barracudanetworks/barracuda-ng-firewallbyol-ARM}
 
 
-    The above command retrieves available Barracuda partner solutions and displays corrosponding data.
+The above command retrieves available Barracuda partner solutions and displays corrosponding data.
 #>
 function Get-ASCSecuritySolutionReferenceData {
     [CmdletBinding()]
@@ -1189,27 +1176,27 @@ function Get-ASCSecuritySolutionReferenceData {
 }
 <#
 .Synopsis
-   Get-ASCSecuritySolution retrieves the list of deployed partner solutions.
+Get-ASCSecuritySolution retrieves the list of deployed partner solutions.
 .DESCRIPTION
-   Retrieves currently deployed partner solutions and corrosponding data.
+Retrieves currently deployed partner solutions and corrosponding data.
 .EXAMPLE
-    PS C:\> Get-ASCSecuritySolution | select -ExpandProperty properties
+Get-ASCSecuritySolution | select -ExpandProperty properties
 
 
-    securityFamily           : SaasWaf
-    integrationLevel         : SemiIntegrated
-    protectionStatus         : Good
-    template                 : Microsoft.ApplicationGateway-ARM
-    protectedResourcesStates : {}
-    protectedResourcesTypes  : {}
-    managementUrl            : https://portal.azure.com#resource/subscriptions/6b1cebbd-5731-4780-8f96-2078da96fd96/resourceGroups/ASC-Playbook/providers/Microsoft.N
-                               etwork/applicationGateways/ASC-Playbook-WAG/overview
-    creationDate             : 2017-04-25T05:29:04.2645167Z
-    provisioningState        : Succeeded
-    clusterId                : 3BFDEEB35202166EC0A77A5C4B1D125C0A28CD51
+securityFamily           : SaasWaf
+integrationLevel         : SemiIntegrated
+protectionStatus         : Good
+template                 : Microsoft.ApplicationGateway-ARM
+protectedResourcesStates : {}
+protectedResourcesTypes  : {}
+managementUrl            : https://portal.azure.com#resource/subscriptions/6b1cebbd-5731-4780-8f96-2078da96fd96/resourceGroups/ASC-Playbook/providers/Microsoft.N
+                            etwork/applicationGateways/ASC-Playbook-WAG/overview
+creationDate             : 2017-04-25T05:29:04.2645167Z
+provisioningState        : Succeeded
+clusterId                : 3BFDEEB35202166EC0A77A5C4B1D125C0A28CD51
 
 
-    The above command displays currently deployed partner solutions and their corrosponding data.
+The above command displays currently deployed partner solutions and their corrosponding data.
 #>
 function Get-ASCSecuritySolution {
     [CmdletBinding()]
@@ -1243,7 +1230,7 @@ function Get-ASCSecuritySolution {
 }
 <#
 .Synopsis
-
+Set-ASCProtected Resource.
 .DESCRIPTION
 
 .EXAMPLE
@@ -1384,20 +1371,20 @@ function Set-ASCJITAccessPolicy {
 
 $JSON = @'
 {
-    "kind": "Basic",
-    "type": "Microsoft.Security/locations/jitNetworkAccessPolicies",
-    "name": "default",
-    "id": "/subscriptions/e5d1b86c-3051-44d5-8802-aa65d45a279b/resourceGroups/CxP-Mike/providers/Microsoft.Security/locations/westus2/jitNetworkAccessPolicies/default",
-    "properties": {
-        "virtualMachines": [{
-            "id": "/subscriptions/e5d1b86c-3051-44d5-8802-aa65d45a279b/resourceGroups/CxP-Mike/providers/Microsoft.Compute/virtualMachines/2016-Nano1",
-            "ports": [{
-                "maxRequestAccessDuration": "PT3H",
-                "number": 22,
-                "allowedSourceAddressPrefix": "*"
-            }]
-        }]
-    }
+"kind": "Basic",
+"type": "Microsoft.Security/locations/jitNetworkAccessPolicies",
+"name": "default",
+"id": "/subscriptions/e5d1b86c-3051-44d5-8802-aa65d45a279b/resourceGroups/CxP-Mike/providers/Microsoft.Security/locations/westus2/jitNetworkAccessPolicies/default",
+"properties": {
+    "virtualMachines": [{
+        "id": "/subscriptions/e5d1b86c-3051-44d5-8802-aa65d45a279b/resourceGroups/CxP-Mike/providers/Microsoft.Compute/virtualMachines/2016-Nano1",
+        "ports": [{
+            "maxRequestAccessDuration": "PT3H",
+            "number": 22,
+            "allowedSourceAddressPrefix": "*"
+        }]
+    }]
+}
 }
 '@
 
@@ -1509,5 +1496,3 @@ function Invoke-ASCJITAccess {
     End {
     }
 }
-
-Export-ModuleMember -Function *-ASC*
