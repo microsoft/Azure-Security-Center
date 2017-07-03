@@ -353,7 +353,7 @@ function Build-ASCJSON {
     )
 
     Begin {
-        Set-Vars
+        
         Set-Context
         try{
         # Additional parameter validations and mutual exclusions
@@ -534,7 +534,7 @@ function Get-ASCPolicy {
     )
 
     Begin {
-        Set-Vars
+        
         $asc_endpoint = 'policies' #Set endpoint.
         $asc_APIVersion = "?api-version=$version" #Build version syntax.
         Set-Context
@@ -621,7 +621,7 @@ function Set-ASCPolicy {
     )
 
     Begin {
-        Set-Vars
+        
         Set-Context
         $asc_endpoint = 'policies' #Set endpoint.
         $asc_APIVersion = "?api-version=$version" #Build version syntax.
@@ -675,7 +675,7 @@ function Get-ASCStatus {
     )
 
     Begin {
-        Set-Vars
+        
         Set-Context
         $asc_endpoint = 'securityStatuses' #Set endpoint.
         $asc_APIVersion = "?api-version=$version" #Build version syntax.
@@ -731,7 +731,7 @@ function Get-ASCTask {
     )
 
     Begin {
-        Set-Vars
+        
         Set-Context
         $asc_endpoint = 'tasks' #Set endpoint.
         $asc_APIVersion = "?api-version=$version" #Build version syntax.
@@ -797,7 +797,7 @@ function Set-ASCTask {
     )
 
     Begin {
-        Set-Vars
+        
         Set-Context
         $asc_endpoint = 'tasks' #Set endpoint.
         $asc_APIVersion = "?api-version=$version" #Build version syntax.
@@ -941,7 +941,7 @@ function Set-ASCAlert {
     )
 
     Begin {
-        Set-Vars
+        
         Set-Context
         $asc_endpoint = 'alerts' #Set endpoint.
         $asc_APIVersion = "?api-version=$version" #Build version syntax.
@@ -1042,7 +1042,7 @@ function Get-ASCDataCollection {
     )
 
     Begin {
-        Set-Vars
+        
         Set-Context
         $asc_endpoint = 'dataCollectionResults' #Set endpoint.
         $asc_APIVersion = "?api-version=$version" #Build version syntax.
@@ -1093,7 +1093,7 @@ function Get-ASCLocation {
     )
 
     Begin {
-        Set-Vars
+        
         Set-Context
         $asc_endpoint = 'locations' #Set endpoint.
         $asc_APIVersion = "?api-version=$version" #Build version syntax.
@@ -1156,7 +1156,7 @@ function Get-ASCSecuritySolutionReferenceData {
     )
 
     Begin {
-        Set-Vars
+        
         Set-Context
         $asc_endpoint = 'securitySolutionsReferenceData' #Set endpoint.
         $asc_APIVersion = "?api-version=$version" #Build version syntax.
@@ -1210,7 +1210,7 @@ function Get-ASCSecuritySolution {
     )
 
     Begin {
-        Set-Vars
+        
         Set-Context
         $asc_endpoint = 'securitySolutions' #Set endpoint.
         $asc_APIVersion = "?api-version=$version" #Build version syntax.
@@ -1266,7 +1266,7 @@ function Set-ASCProtectedResource {
 
     Begin {
         Write-Warning "This cmdlet is currently in development and may not work as expected."
-        Set-Vars
+        
         Set-Context
         $asc_endpoint = 'securitySolutions' #Set endpoint.
         $asc_APIVersion = "?api-version=$version" #Build version syntax.
@@ -1310,7 +1310,7 @@ function Get-ASCJITAccessPolicy {
     )
 
     Begin {
-        Set-Vars
+        
         Set-Context
         $asc_endpoint = 'jitNetworkAccessPolicies' #Set endpoint.
         $asc_APIVersion = "?api-version=$version" #Build version syntax.
@@ -1362,7 +1362,7 @@ function Set-ASCJITAccessPolicy {
     )
 
     Begin {
-        Set-Vars
+        
         Set-Context
         $asc_endpoint = 'jitNetworkAccessPolicies' #Set endpoint.
         $asc_APIVersion = "?api-version=$version" #Build version syntax.
@@ -1462,7 +1462,7 @@ function Invoke-ASCJITAccess {
     )
 
     Begin {
-        Set-Vars
+        
         Set-Context
         $asc_endpoint = 'jitNetworkAccessPolicies' #Set endpoint.
         $asc_APIVersion = "?api-version=$version" #Build version syntax.
