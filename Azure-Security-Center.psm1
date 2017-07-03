@@ -1,4 +1,5 @@
 #region ------------Internal Functions-------------------
+function Show-Warning {Write-Warning "This module is an open-source project and not formally part of the Microsoft Azure Security Center product. In addition, this module is currently in development and may have bugs/issues; please use at your own risk."}
 function Set-Context {
     if(-not (Get-Module AzureRm.Profile)) {
         Import-Module AzureRm.Profile
@@ -353,7 +354,7 @@ function Build-ASCJSON {
     )
 
     Begin {
-        
+        Show-Warning
         Set-Context
         try{
         # Additional parameter validations and mutual exclusions
@@ -534,7 +535,7 @@ function Get-ASCPolicy {
     )
 
     Begin {
-        
+        Show-Warning
         $asc_endpoint = 'policies' #Set endpoint.
         $asc_APIVersion = "?api-version=$version" #Build version syntax.
         Set-Context
@@ -621,7 +622,7 @@ function Set-ASCPolicy {
     )
 
     Begin {
-        
+        Show-Warning
         Set-Context
         $asc_endpoint = 'policies' #Set endpoint.
         $asc_APIVersion = "?api-version=$version" #Build version syntax.
@@ -675,7 +676,7 @@ function Get-ASCStatus {
     )
 
     Begin {
-        
+        Show-Warning
         Set-Context
         $asc_endpoint = 'securityStatuses' #Set endpoint.
         $asc_APIVersion = "?api-version=$version" #Build version syntax.
@@ -731,7 +732,7 @@ function Get-ASCTask {
     )
 
     Begin {
-        
+        Show-Warning
         Set-Context
         $asc_endpoint = 'tasks' #Set endpoint.
         $asc_APIVersion = "?api-version=$version" #Build version syntax.
@@ -797,7 +798,7 @@ function Set-ASCTask {
     )
 
     Begin {
-        
+        Show-Warning
         Set-Context
         $asc_endpoint = 'tasks' #Set endpoint.
         $asc_APIVersion = "?api-version=$version" #Build version syntax.
@@ -874,6 +875,7 @@ function Get-ASCAlert {
     )
 
     Begin {
+        Show-Warning
         Set-Context
         $asc_endpoint = 'alerts' #Set endpoint.
         $asc_APIVersion = "?api-version=$asc_version" #Build version syntax.
@@ -941,7 +943,7 @@ function Set-ASCAlert {
     )
 
     Begin {
-        
+        Show-Warning
         Set-Context
         $asc_endpoint = 'alerts' #Set endpoint.
         $asc_APIVersion = "?api-version=$version" #Build version syntax.
@@ -1042,7 +1044,7 @@ function Get-ASCDataCollection {
     )
 
     Begin {
-        
+        Show-Warning
         Set-Context
         $asc_endpoint = 'dataCollectionResults' #Set endpoint.
         $asc_APIVersion = "?api-version=$version" #Build version syntax.
@@ -1093,7 +1095,7 @@ function Get-ASCLocation {
     )
 
     Begin {
-        
+        Show-Warning
         Set-Context
         $asc_endpoint = 'locations' #Set endpoint.
         $asc_APIVersion = "?api-version=$version" #Build version syntax.
@@ -1156,7 +1158,7 @@ function Get-ASCSecuritySolutionReferenceData {
     )
 
     Begin {
-        
+        Show-Warning
         Set-Context
         $asc_endpoint = 'securitySolutionsReferenceData' #Set endpoint.
         $asc_APIVersion = "?api-version=$version" #Build version syntax.
@@ -1210,7 +1212,7 @@ function Get-ASCSecuritySolution {
     )
 
     Begin {
-        
+        Show-Warning
         Set-Context
         $asc_endpoint = 'securitySolutions' #Set endpoint.
         $asc_APIVersion = "?api-version=$version" #Build version syntax.
@@ -1265,9 +1267,9 @@ function Set-ASCProtectedResource {
     )
 
     Begin {
-        Write-Warning "This cmdlet is currently in development and may not work as expected."
-        
+        Show-Warning
         Set-Context
+        Write-Warning "This cmdlet is currently in development and may not work as expected."
         $asc_endpoint = 'securitySolutions' #Set endpoint.
         $asc_APIVersion = "?api-version=$version" #Build version syntax.
     }
@@ -1285,20 +1287,20 @@ function Set-ASCProtectedResource {
 }
 <#
 .Synopsis
-   Get-ASCJITAccessPolicy retrieves all of your currently set JIT policies in the current subscription.
+Get-ASCJITAccessPolicy retrieves all of your currently set JIT policies in the current subscription.
 .DESCRIPTION
-   This cmdlet gets a list of all set JIT policies that can be used to invoke JIT on a particular resource using the Invoke-ASCJITAccess cmdlet.
+This cmdlet gets a list of all set JIT policies that can be used to invoke JIT on a particular resource using the Invoke-ASCJITAccess cmdlet.
 .EXAMPLE
-    Get-ASCJITAccessPolicy | select -first 1 | fl -force
+Get-ASCJITAccessPolicy | select -first 1 | fl -force
 
-    properties : @{vmId=/subscriptions/6b1ccdcd-5731-4780-8556-2078dd96fdcc/resourceGroups/ContosoRG/providers/Microsoft.Compute/virtualMachines/DC1; ports=System.Object[];
-                 requests=System.Object[]; provisioningState=Succeeded}
-    id         : /subscriptions/6b1ccdcd-5731-4780-8556-2078dd96fdcc/resourceGroups/ContosoRGE/providers/Microsoft.Compute/virtualMachines/DC1/providers/Microsoft.Security/jitN
-                 etworkAccessPolicies/default
-    name       : default
-    type       : Microsoft.Security/jitNetworkAccessPolicies
+properties : @{vmId=/subscriptions/6b1ccdcd-5731-4780-8556-2078dd96fdcc/resourceGroups/ContosoRG/providers/Microsoft.Compute/virtualMachines/DC1; ports=System.Object[];
+                requests=System.Object[]; provisioningState=Succeeded}
+id         : /subscriptions/6b1ccdcd-5731-4780-8556-2078dd96fdcc/resourceGroups/ContosoRGE/providers/Microsoft.Compute/virtualMachines/DC1/providers/Microsoft.Security/jitN
+                etworkAccessPolicies/default
+name       : default
+type       : Microsoft.Security/jitNetworkAccessPolicies
 
-    The above example retrieves the list of JIT policies, selects the first one, and displays the properties as a list.
+The above example retrieves the list of JIT policies, selects the first one, and displays the properties as a list.
 #>
 function Get-ASCJITAccessPolicy {
     [CmdletBinding()]
@@ -1310,8 +1312,9 @@ function Get-ASCJITAccessPolicy {
     )
 
     Begin {
-        
+        Show-Warning
         Set-Context
+        Write-Warning "This cmdlet is used with a private preview feature. If your subscription does not currently support this feature, this cmdlet may not work."
         $asc_endpoint = 'jitNetworkAccessPolicies' #Set endpoint.
         $asc_APIVersion = "?api-version=$version" #Build version syntax.
     }
@@ -1334,11 +1337,29 @@ function Get-ASCJITAccessPolicy {
 #region Set-ASCJITAccessPolicy
 <#
 .Synopsis
-   Set-ASCJITAccessPolicy is used to enable or disable JIT on specified VM's.
+Set-ASCJITAccessPolicy is used to enable or disable Just-in-Time Port Administration on specified VM's.
 .DESCRIPTION
-
+This cmdlet should be used by Azure Security Center administrators to set a JIT policy for specific virtual machines. Minimum duriation is 5 minutes, maximum duration is 24 hours.    
 .EXAMPLE
+Set-ASCJITAccessPolicy -ResourceGroupName ContosoRG -VM 2016-Nano1 -Version 2016-01-03-alpha -Port 22,3398
 
+{
+    "id":  "/subscriptions/e5d1b86c-3051-44d5-8802-aa65d45a279b/resourceGroups/CxP-Mike/providers/Microsoft.Compute/virtualMachines/2016-Nano1",
+    "ports":  [
+                  {
+                      "number":  22,
+                      "allowedSourceAddressPrefix":  "*",
+                      "maxRequestAccessDuration":  "PT3H"
+                  },
+                  {
+                      "number":  3398,
+                      "allowedSourceAddressPrefix":  "*",
+                      "maxRequestAccessDuration":  "PT3H"
+                  }
+              ]
+}
+
+The above example sets a JIT policy on the 2016-Nano1 server for ports 22 and 3398, with a duration of 3 hours (default).
 #>
 function Set-ASCJITAccessPolicy {
     [CmdletBinding()]
@@ -1356,13 +1377,32 @@ function Set-ASCJITAccessPolicy {
                    Position=1)]
         [String]$VM,
 
+        # Ports to be JIT enabled
+        [Parameter(Mandatory=$true,
+                   ValueFromPipelineByPropertyName=$false,
+                   Position=2)]
+        [int[]]$Port,
+
+        # The maximum allowed number of hours for ports to remain open. Default = 3
+        [Parameter(Mandatory=$false,
+                   ValueFromPipelineByPropertyName=$false,
+                   Position=3)]
+        [ValidateRange(1,24)]
+        [int]$MaxRequestHour = 3,
+
+        # The maximum allowed number of minutes for ports to remain open. Default = 0
+        [Parameter(Mandatory=$false,
+                   ValueFromPipelineByPropertyName=$false,
+                   Position=3)]
+        [ValidateRange(0,60)]
+        [int]$MaxRequestMinute = 0,
+
         # Security API version. By default this uses the $asc_version variable which this module pre-sets. Only specify this if necessary.
         [Parameter(Mandatory=$false)]
         [string]$Version = $asc_version
     )
-
-    Begin {
-        
+        Write-Warning "This cmdlet is used with a private preview feature. If your subscription does not currently support this feature, this cmdlet may not work."
+        Show-Warning
         Set-Context
         $asc_endpoint = 'jitNetworkAccessPolicies' #Set endpoint.
         $asc_APIVersion = "?api-version=$version" #Build version syntax.
@@ -1371,66 +1411,57 @@ function Set-ASCJITAccessPolicy {
         $asc_vm_id = (Get-AzureRMVM -ResourceGroupName $ResourceGroupName -Name $VM).Id
 
 
-$JSON = @'
-{
-"kind": "Basic",
-"type": "Microsoft.Security/locations/jitNetworkAccessPolicies",
-"name": "default",
-"id": "/subscriptions/e5d1b86c-3051-44d5-8802-aa65d45a279b/resourceGroups/CxP-Mike/providers/Microsoft.Security/locations/westus2/jitNetworkAccessPolicies/default",
-"properties": {
-    "virtualMachines": [{
-        "id": "/subscriptions/e5d1b86c-3051-44d5-8802-aa65d45a279b/resourceGroups/CxP-Mike/providers/Microsoft.Compute/virtualMachines/2016-Nano1",
-        "ports": [{
-            "maxRequestAccessDuration": "PT3H",
-            "number": 22,
-            "allowedSourceAddressPrefix": "*"
-        }]
-    }]
-}
-}
-'@
+
+        if ($MaxRequestHour -eq 24 -and $MaxRequestMinute){Write-Error 'You may not specify a length of time longer than 24 hours.'}
+        if ($MaxRequestMinute -le 4 -and !$MaxRequestHour){Write-Error 'You may not specify a length of time less than 5 minutes.'}
+        $Duration = "PT$($MaxRequestHour)H$($MaxRequestMinute)M"
 
 
-<#
+        $Port_collection = @()
+        foreach ($i in $Port){
+            $Port_collection += @{
+                maxRequestAccessDuration = $Duration
+                number = $i
+                allowedSourceAddressPrefix = "*"
+            }
+        }
+
         $Body = @{}
         $Body += @{
             kind = "Basic"
-            properties = @{
-                virtualMachines = @(@{
-                    id = "$asc_vm_id"
-                        ports = @(@{
-                            number = 22
-                            allowedSourceAddressPrefix = "*"
-                            maxRequestAccessDuration = "PT3H"})
-                })
-            }
-            id = "/subscriptions/$asc_subscriptionId/resourceGroups/$ResourceGroupName/providers/Microsoft.Security/locations/$asc_location/$asc_endpoint/default"
+            type = "Microsoft.Security/locations/jitNetworkAccessPolicies"
             name = "default"
-            type = "Microsoft.Security/locations/jitNetworkAccessPolicies"}
+            id = (Get-ASCJITAccessPolicy -Version 2016-01-03-alpha | where {$_.id -match $ResourceGroupName}).id
+            properties = @{
+                virtualMachines = @(
+                        @{
+                        id = (Get-AzureRmVM -ResourceGroupName $ResourceGroupName -Name $VM).Id
+                        ports = $Port_collection
+                        }
+                    )
+                }
+            }
 
-        $JSON = $Body | ConvertTo-Json -Depth 4
-        $JSON
-#>
-    }
-    Process {
+        $JSON = $Body | ConvertTo-Json -Depth 5
+
+
+
         Write-Warning "This cmdlet leverages a feature that is in private preview and will not work if your tenant is not configured for JIT Access."
         $asc_uri = "https://$asc_url/subscriptions/$asc_subscriptionId/resourceGroups/$ResourceGroupName/providers/Microsoft.Security/locations/$asc_location/$asc_endpoint/default$asc_APIVersion"
         Try {
-                Invoke-RestMethod -Uri $asc_uri -Method Put -Headers $asc_requestHeader -Body $JSON
+                $response = Invoke-RestMethod -Uri $asc_uri -Method Put -Headers $asc_requestHeader -Body $JSON -ContentType "application/json"
             }
         Catch {
                 Write-Error $_
             }
         Finally {
-
+                $response.properties.virtualMachines | ConvertTo-Json -Depth 3
             }
-    }
-    End {
-    }
+
 }
 <#
 .Synopsis
-    Invoke-ASCJITAccess is used to invoke JIT access to an Azure VM.
+Invoke-ASCJITAccess is used to invoke JIT access to an Azure VM.
 .DESCRIPTION
 
 .EXAMPLE
@@ -1454,7 +1485,7 @@ function Invoke-ASCJITAccess {
         # The JSON configuration.
         [Parameter(Mandatory=$true,
                    ValueFromPipelineByPropertyName=$false)]
-        [string[]]$Port,
+        [int]$Port,
 
         # Security API version. By default this uses the $asc_version variable which this module pre-sets. Only specify this if necessary.
         [Parameter(Mandatory=$false)]
@@ -1462,37 +1493,39 @@ function Invoke-ASCJITAccess {
     )
 
     Begin {
-        
+        Write-Warning "This cmdlet is used with a private preview feature. If your subscription does not currently support this feature, this cmdlet may not work."
+        Show-Warning
         Set-Context
         $asc_endpoint = 'jitNetworkAccessPolicies' #Set endpoint.
         $asc_APIVersion = "?api-version=$version" #Build version syntax.
 
-        $location = (Get-AzuerRMVM -resourcegroupname $ResourceGroupName -Name $VM).location
+        $location = (Get-AzureRMVM -resourcegroupname $ResourceGroupName -Name $VM).location
 
         $Body = @{
-            virtualMachines = @{
+            virtualMachines = @(@{
                 id = "/subscriptions/$asc_subscriptionId/resourceGroups/$ResourceGroupName/providers/Microsoft.Compute/virtualMachines/$VM"
-                ports = @{
-                    value = $Port
-                    allowedSourceAddressPrefix = ""
-                    endTimeUtc = ([DateTime]::UtcNow.AddHours(3).ToString("o"))
-                }
-            }
+                ports = @(@{
+                    number = $Port
+                    allowedSourceAddressPrefix = "*"
+                    endTimeUtc = ([DateTime]::UtcNow.AddHours(3).ToString("yyyy-MM-ddTHH:mm:ssZ"))
+                })
+            })
         }
-
+        $Body = $Body | ConvertTo-Json -Depth 4
+        $Body
     }
     Process {
         Write-Warning "This cmdlet leverages a feature that is in private preview and will not work if your tenant is not configured for JIT Access."
         Write-Warning "This cmdlet may break in the near future!"
-        $asc_uri = "https://$asc_url/subscriptions/$asc_subscriptionId/resourceGroups/$ResourceGroupName/providers/microsoft.Security/locations/$location/$asc_endpoint/default/initiate$asc_APIVersion"
+        $asc_uri = "https://$asc_url/subscriptions/$asc_subscriptionId/resourceGroups/$ResourceGroupName/providers/microsoft.Security/locations/$location/$asc_endpoint/default/Initiate$asc_APIVersion"
         Try {
-                $asc_request = Invoke-RestMethod -Uri $asc_uri -Method Post -Body $Body -Headers $asc_requestHeader
+                $asc_request = Invoke-WebRequest -Uri $asc_uri -Method Post -Body $Body -Headers $asc_requestHeader -ContentType "application/json"
             }
         Catch {
                 Write-Error $_
             }
         Finally {
-                $asc_request.value
+                $asc_request
             }
     }
     End {
