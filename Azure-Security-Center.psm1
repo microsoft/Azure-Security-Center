@@ -1,21 +1,14 @@
 #region ------------Internal Functions-------------------
-function Set-Vars {
-    $Script:asc_clientId = "1950a258-227b-4e31-a9cf-717495945fc2"              # Well-known client ID for Azure PowerShell
-    $Script:asc_redirectUri = "urn:ietf:wg:oauth:2.0:oob"                      # Redirect URI for Azure PowerShell
-    $Script:asc_resourceAppIdURI = "https://management.azure.com/"             # Resource URI for REST API
-    $Script:asc_url = 'management.azure.com'                                   # Well-known URL endpoint
-    $Script:asc_version = "2015-06-01-preview"                                 # Latest API version
-    $Script:version = $asc_version
-    }
 function Set-Context {
     if(-not (Get-Module AzureRm.Profile)) {
         Import-Module AzureRm.Profile
         }
-
+    Write-Verbose "Checking AzureRM.profile version"
     $azureRmProfileModuleVersion = (Get-Module AzureRm.Profile).Version
 
         # refactoring performed in AzureRm.Profile v3.0 or later
     if($azureRmProfileModuleVersion.Major -ge 3) {
+        Write-Verbose "AzureRM.profile v3.x verified"
         $azureRmProfile = [Microsoft.Azure.Commands.Common.Authentication.Abstractions.AzureRmProfileProvider]::Instance.Profile
         if(-not $azureRmProfile.Accounts.Count) {
             Write-Error "Ensure you have logged in before calling this function."
@@ -24,23 +17,33 @@ function Set-Context {
 
     else {
         # AzureRm.Profile < v3.0
+        Write-Verbose "AzureRM.profile v2.x verified"
         $azureRmProfile = [Microsoft.WindowsAzure.Commands.Common.AzureRmProfileProvider]::Instance.Profile
         if(-not $azureRmProfile.Context.Account.Count) {
         Write-Error "Ensure you have logged in before calling this function."
         }
     }
-
+    Write-Verbose "Checking AzureRM Context"
     $currentAzureContext = Get-AzureRmContext
     $profileClient = New-Object Microsoft.Azure.Commands.ResourceManager.Common.RMProfileClient($azureRmProfile)
+    Write-Verbose "Getting access token"
     Write-Debug ("Getting access token for tenant" + $currentAzureContext.Subscription.TenantId)
     $token = $profileClient.AcquireAccessToken($currentAzureContext.Subscription.TenantId)
     $token = $token.AccessToken
+    Write-Verbose "Extracting subscription and tenant ids"
     $asc_subscriptionId = $currentAzureContext.Subscription.Id
     $asc_tenantId = $currentAzureContext.Tenant.Id
+    Write-Verbose "Creating auth header"
     Set-Variable -Name asc_requestHeader -Scope Script -Value @{"Authorization" = "Bearer $token"}
     #2.x AzureRM outputs subscriptionid differently.
     if($azureRmProfileModuleVersion.Major -le 2) {Set-Variable -Name asc_subscriptionId -Scope Script -Value $currentAzureContext.Subscription.SubscriptionId}
     else{Set-Variable -Name asc_subscriptionId -Scope Script -Value $currentAzureContext.Subscription.Id}
+    Write-Verbose "Setting wellknown vars"
+    $Script:asc_clientId = "1950a258-227b-4e31-a9cf-717495945fc2"              # Well-known client ID for Azure PowerShell
+    $Script:asc_redirectUri = "urn:ietf:wg:oauth:2.0:oob"                      # Redirect URI for Azure PowerShell
+    $Script:asc_resourceAppIdURI = "https://management.azure.com/"             # Resource URI for REST API
+    $Script:asc_url = 'management.azure.com'                                   # Well-known URL endpoint
+    $Script:asc_version = "2015-06-01-preview" 
 }
 #endregion
 
@@ -871,10 +874,9 @@ function Get-ASCAlert {
     )
 
     Begin {
-        Set-Vars
         Set-Context
         $asc_endpoint = 'alerts' #Set endpoint.
-        $asc_APIVersion = "?api-version=$version" #Build version syntax.
+        $asc_APIVersion = "?api-version=$asc_version" #Build version syntax.
     }
     Process {
         Try {
