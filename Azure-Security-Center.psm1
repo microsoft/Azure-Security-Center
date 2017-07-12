@@ -1461,17 +1461,29 @@ function Set-ASCJITAccessPolicy {
 }
 <#
 .Synopsis
-Invoke-ASCJITAccess is used to invoke JIT access to an Azure VM.
+Invoke-ASCJITAccess is used to initialize ports for a JIT-enabled VM.
 .DESCRIPTION
-
+Azure Security Center's JIT feature allows you to put your most important ports in a default-deny state until you need them open. These rules are represented in the NSG. When issuing this Invoke-ASCJITAccess command, you will specify which ports to open, for how long, and for which source address prefixes. This adds a temporary rule to your NSG which will then be removed at the end of the specified duration.
 .EXAMPLE
+Invoke-ASCJITAccess -ResourceGroupName MyRG1 -VM 2012R2-Client1 -Port 3389
 
+WARNING: Specified ports for 2012R2-Client1 have been opened for 3 hours and 0 minutes.
+WARNING: Ports may take up to 1 minute to open.
+
+The above example uses many of the defaults to open port 3389 for 3 hours for any IP addresses.
+.EXAMPLE
+Invoke-ASCJITAccess -ResourceGroupName MyRG1 -VM 2012R2-Client1 -Port 3389, 22 -AddressPrefix 10.2.1.0/24 -Hours 1 -Minutes 30
+
+Write-Warning "Specified ports for 2012R2-Client1 have been opened for 1 hours and 30 minutes."
+Write-Warning "Ports may take up to 1 minute to open."
+
+The above command issues the initialize call for ports 3389 and 22. These ports will now be open for any machines connecting from address on the 10.2.1.x subnet.
 #>
 function Invoke-ASCJITAccess {
     [CmdletBinding()]
     Param
     (
-        # Resource Group Name.
+        # Resource Group Name for the virtual machine.
         [Parameter(Mandatory=$true,
                    ValueFromPipelineByPropertyName=$false,
                    Position=0)]
@@ -1482,23 +1494,23 @@ function Invoke-ASCJITAccess {
                    ValueFromPipelineByPropertyName=$false)]
         [string]$VM,
 
-        # Port number to open.
+        # Port number(s) to open. This can be a single port or a comma separated list of ports. (example: 3389,22,25)
         [Parameter(Mandatory=$true,
                    ValueFromPipelineByPropertyName=$false)]
         [int[]]$Port,
 
-        # Allowed Source IP Address Prefix. Default = *
+        # Allowed Source IP Address Prefix. This can be an IPv4 address, an IPv4 CIDR block, or * (any). Default = *
         [Parameter(Mandatory=$false,
                    ValueFromPipelineByPropertyName=$false)]
         [string]$AddressPrefix = '*',
 
-        # Duration Hours. Default = 3
+        # Duration Hours. This determines how many hours to have the port open. This must be at or below the max duration set in the JIT policy for the VM. Maximum hours is 24. Default = 3
         [Parameter(Mandatory=$false,
                    ValueFromPipelineByPropertyName=$false)]
         [ValidateRange(0,24)]
         [int]$Hours,
 
-        # Duration Hours. Default = 0
+        # Duration Hours. This determines how many minutes to have the port open. This must be at or below the max duration set in the JIT policy for the VM. Maximum minutes is 59. Default = 0
         [Parameter(Mandatory=$false,
                    ValueFromPipelineByPropertyName=$false)]
         [ValidateRange(0,59)]
