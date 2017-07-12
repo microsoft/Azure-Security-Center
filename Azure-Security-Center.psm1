@@ -1384,6 +1384,11 @@ function Set-ASCJITAccessPolicy {
         [ValidateSet('TCP','UDP','*')]
         [string]$Protocol="*",
 
+        # Allowed Source IP Address Prefix. (IP Address, CIDR block, or *) Default = * 
+        [Parameter(Mandatory=$false,
+                   ValueFromPipelineByPropertyName=$false)]
+        [string]$AddressPrefix = '*',
+
         # The maximum allowed number of hours for ports to remain open. Default = 3
         [Parameter(Mandatory=$false,
                    ValueFromPipelineByPropertyName=$false)]
@@ -1400,7 +1405,6 @@ function Set-ASCJITAccessPolicy {
         [Parameter(Mandatory=$false)]
         [string]$Version = $asc_version
     )
-    Write-Warning "This cmdlet requires the JIT preview feature."
     Set-Context
     $asc_endpoint = 'jitNetworkAccessPolicies' #Set endpoint.
     $asc_APIVersion = "?api-version=$Version" #Build version syntax.
@@ -1421,7 +1425,7 @@ function Set-ASCJITAccessPolicy {
             maxRequestAccessDuration = $Duration
             number = $i
             protocol = $Protocol
-            allowedSourceAddressPrefix = "*"
+            allowedSourceAddressPrefix = $AddressPrefix
         }
     }
 
@@ -1451,7 +1455,8 @@ function Set-ASCJITAccessPolicy {
             Write-Error $_
         }
     Finally {
-            $response.properties.virtualMachines | ConvertTo-Json -Depth 3
+            Write-Warning "JIT Policy for source $AddressPrefix set on $VM for port(s) $Port with protocol $Protocol for maximum time $MaxRequestHour hours and $MaxRequestMinute minutes."
+            Write-Verbose ($response.properties.virtualMachines | ConvertTo-Json -Depth 3)
         }
 }
 <#
