@@ -1,5 +1,7 @@
 #region ------------Internal Functions-------------------
-function Show-Warning {Write-Warning "This module is an open-source project and not formally part of the Microsoft Azure Security Center product. In addition, this module is currently in development and may have bugs/issues; please use at your own risk."}
+function Show-Warning {
+    Write-Verbose "This module is an open-source project and not formally part of the Microsoft Azure Security Center product. In addition, this module is currently in development and may have bugs/issues; please use at your own risk."
+    }
 function Set-Context {
     if(-not (Get-Module AzureRm.Profile)) {
         Import-Module AzureRm.Profile
@@ -44,7 +46,7 @@ function Set-Context {
     $Script:asc_redirectUri = "urn:ietf:wg:oauth:2.0:oob"                      # Redirect URI for Azure PowerShell
     $Script:asc_resourceAppIdURI = "https://management.azure.com/"             # Resource URI for REST API
     $Script:asc_url = 'management.azure.com'                                   # Well-known URL endpoint
-    $Script:asc_version = "2015-06-01-preview" 
+    $Script:asc_version = "2015-06-01-preview"                                 # Default API Version
 }
 #endregion
 
@@ -309,6 +311,13 @@ function Build-ASCJSON {
         [ValidateSet('On','Off')]
         [string]$JITNetworkAccess,
 
+        # Application Whitelisting. Specifies if Application Whitelisting recommendation should be 'On' or 'Off'.
+        [Parameter(Mandatory=$false,
+                   ValueFromPipelineByPropertyName=$false,
+                   ParameterSetName='Policy')]
+        [ValidateSet('On','Off')]
+        [string]$ApplicationWhitelisting,
+
         # DataCollection. Specifies if data collection for the resources in the subscription should be 'On' or 'Off'.
         [Parameter(Mandatory=$false,
                    ValueFromPipelineByPropertyName=$false,
@@ -350,12 +359,15 @@ function Build-ASCJSON {
 
         # Security API version. By default this uses the $asc_version variable which this module pre-sets. Only specify this if necessary.
         [Parameter(Mandatory=$false)]
-        [string]$Version = $asc_version
+        [string]$Version
     )
 
     Begin {
         Show-Warning
         Set-Context
+        if (!$Version) {$Version = $asc_version}
+        $asc_APIVersion = "?api-version=$Version" #Build version syntax.
+
         try{
         # Additional parameter validations and mutual exclusions
         If ($AllOn -and $AllOff) {Throw 'Cannot reconcile app parameters. Only use one of them at a time.'}
@@ -399,6 +411,7 @@ function Build-ASCJSON {
                 $json_policy.properties.recommendations.vulnerabilityAssessment =  "Off"
                 $json_policy.properties.recommendations.storageEncryption =        "Off"
                 $json_policy.properties.recommendations.jitNetworkAccess =         "Off"
+                $json_policy.properties.recommendations.appWhitelisting =          "Off"
                 }
 
             #Turn all recommendations on if specified
@@ -418,6 +431,7 @@ function Build-ASCJSON {
                 $json_policy.properties.recommendations.vulnerabilityAssessment =  "On"
                 $json_policy.properties.recommendations.storageEncryption =        "On"
                 $json_policy.properties.recommendations.jitNetworkAccess =         "On"
+                $json_policy.properties.recommendations.appWhitelisting =          "On"
                 }
 
             #Update recommendations if individual parameters are specified
@@ -434,6 +448,7 @@ function Build-ASCJSON {
             If ($VulnerabilityAssessment){$json_policy.properties.recommendations.vulnerabilityAssessment = $VulnerabilityAssessment}
             If ($StorageEncryption){$json_policy.properties.recommendations = $StorageEncryption}
             If ($JITNetworkAccess){$json_policy.properties.recommendations.jitNetworkAccess = $JITNetworkAccess}
+            If ($ApplicationWhitelisting){$json_policy.properties.recommendations.appWhitelisting = $ApplicationWhitelisting}
 
             #Update security contact information if specified
             If ($SecurityContactEmail){
@@ -531,14 +546,15 @@ function Get-ASCPolicy {
 
         # Security API version. By default this uses the $asc_version variable which this module pre-sets. Only specify this if necessary.
         [Parameter(Mandatory=$false)]
-        [string]$Version = $asc_version
+        [string]$Version
     )
 
     Begin {
         Show-Warning
-        $asc_endpoint = 'policies' #Set endpoint.
-        $asc_APIVersion = "?api-version=$version" #Build version syntax.
         Set-Context
+        if (!$Version) {$Version = $asc_version}
+        $asc_APIVersion = "?api-version=$Version" #Build version syntax.
+        $asc_endpoint = 'policies' #Set endpoint.
     }
     Process {
 
@@ -618,14 +634,15 @@ function Set-ASCPolicy {
 
         # Security API version. By default this uses the $asc_version variable which this module pre-sets. Only specify this if necessary.
         [Parameter(Mandatory=$false)]
-        [string]$Version = $asc_version
+        [string]$Version
     )
 
     Begin {
         Show-Warning
         Set-Context
+        if (!$Version) {$Version = $asc_version}
+        $asc_APIVersion = "?api-version=$Version" #Build version syntax.
         $asc_endpoint = 'policies' #Set endpoint.
-        $asc_APIVersion = "?api-version=$version" #Build version syntax.
     }
     Process {
 
@@ -672,29 +689,22 @@ function Get-ASCStatus {
     (
         # Security API version. By default this uses the $asc_version variable which this module pre-sets. Only specify this if necessary.
         [Parameter(Mandatory=$false)]
-        [string]$Version = $asc_version
+        [string]$Version
     )
-
-    Begin {
         Show-Warning
         Set-Context
+        if (!$Version) {$Version = $asc_version}
+        $asc_APIVersion = "?api-version=$Version" #Build version syntax.
         $asc_endpoint = 'securityStatuses' #Set endpoint.
-        $asc_APIVersion = "?api-version=$version" #Build version syntax.
-    }
-    Process {
+
         $asc_uri = "https://$asc_url/subscriptions/$asc_subscriptionId/providers/microsoft.Security/$asc_endpoint$asc_APIVersion"
         Try {
                 $asc_request = Invoke-RestMethod -Uri $asc_uri -Method Get -Headers $asc_requestHeader
+                $asc_request.value
             }
         Catch {
                 Write-Error $_
             }
-        Finally {
-                $asc_request.value
-            }
-    }
-    End {
-    }
 }
 <#
 .Synopsis
@@ -728,14 +738,15 @@ function Get-ASCTask {
     (
         # Security API version. By default this uses the $asc_version variable which this module pre-sets. Only specify this if necessary.
         [Parameter(Mandatory=$false)]
-        [string]$Version = $asc_version
+        [string]$Version
     )
 
     Begin {
         Show-Warning
         Set-Context
+        if (!$Version) {$Version = $asc_version}
+        $asc_APIVersion = "?api-version=$Version" #Build version syntax.
         $asc_endpoint = 'tasks' #Set endpoint.
-        $asc_APIVersion = "?api-version=$version" #Build version syntax.
     }
     Process {
         $asc_uri = "https://$asc_url/subscriptions/$asc_subscriptionId/providers/microsoft.Security/$asc_endpoint$asc_APIVersion"
@@ -800,20 +811,21 @@ function Set-ASCTask {
     Begin {
         Show-Warning
         Set-Context
+        if (!$Version) {$Version = $asc_version}
+        $asc_APIVersion = "?api-version=$Version" #Build version syntax.
         $asc_endpoint = 'tasks' #Set endpoint.
-        $asc_APIVersion = "?api-version=$version" #Build version syntax.
     }
     Process {
         If ($PSCmdlet.ParameterSetName -eq 'Dismiss') {
                 $asc_uri = "https://$asc_url/subscriptions/$asc_subscriptionId/providers/microsoft.Security/locations/centralus/$asc_endpoint/$TaskID/dismiss$asc_APIVersion"
                 Try {
                         $asc_request = Invoke-RestMethod -Uri $asc_uri -Method Post -Headers $asc_requestHeader
+                        $asc_request
                     }
                 Catch {
                         Write-Error $_
                     }
                 Finally {
-                        $asc_request
                     }
             }
 
@@ -821,12 +833,12 @@ function Set-ASCTask {
                 $asc_uri = "https://$asc_url/subscriptions/$asc_subscriptionId/providers/microsoft.Security/locations/centralus/$asc_endpoint/$TaskID/activate$asc_APIVersion"
                 Try {
                         $asc_request = Invoke-RestMethod -Uri $asc_uri -Method Post -Headers $asc_requestHeader
+                        $asc_request
                     }
                 Catch {
                         Write-Error $_
                     }
                 Finally {
-                        $asc_request
                     }
             }
     }
@@ -856,7 +868,6 @@ Failed RDP Brute Force Attack
 
 The above command retrieves the last 20 alerts and shows them in a table, renaming the alertdisplayname property to 'Alert'.
 #>
-
 function Get-ASCAlert {
     [CmdletBinding()]
     Param
@@ -871,14 +882,15 @@ function Get-ASCAlert {
 
         # Security API version. By default this uses the $asc_version variable which this module pre-sets. Only specify this if necessary.
         [Parameter(Mandatory=$false)]
-        [string]$Version = $asc_version
+        [string]$Version
     )
 
     Begin {
         Show-Warning
         Set-Context
+        if (!$Version) {$Version = $asc_version}
+        $asc_APIVersion = "?api-version=$Version" #Build version syntax.
         $asc_endpoint = 'alerts' #Set endpoint.
-        $asc_APIVersion = "?api-version=$asc_version" #Build version syntax.
     }
     Process {
         Try {
@@ -939,14 +951,15 @@ function Set-ASCAlert {
 
         # Security API version. By default this uses the $asc_version variable which this module pre-sets. Only specify this if necessary.
         [Parameter(Mandatory=$false)]
-        [string]$Version = $asc_version
+        [string]$Version
     )
 
     Begin {
         Show-Warning
         Set-Context
+        if (!$Version) {$Version = $asc_version}
+        $asc_APIVersion = "?api-version=$Version" #Build version syntax.
         $asc_endpoint = 'alerts' #Set endpoint.
-        $asc_APIVersion = "?api-version=$version" #Build version syntax.
     }
     Process {
         If ($Dismiss -and !$Activate) {
@@ -1040,14 +1053,16 @@ function Get-ASCDataCollection {
 
         # Security API version. By default this uses the $asc_version variable which this module pre-sets. Only specify this if necessary.
         [Parameter(Mandatory=$false)]
-        [string]$Version = $asc_version
+        [string]$Version
     )
 
     Begin {
         Show-Warning
         Set-Context
+        if (!$Version) {$Version = $asc_version}
+        $asc_APIVersion = "?api-version=$Version" #Build version syntax.
         $asc_endpoint = 'dataCollectionResults' #Set endpoint.
-        $asc_APIVersion = "?api-version=$version" #Build version syntax.
+
         $asc_resourceGroup = $ResourceGroup
         $asc_compute = $ComputeType
         $asc_vm = $VM
@@ -1057,12 +1072,10 @@ function Get-ASCDataCollection {
         Try {
                 Write-Verbose "Retrieving data for $asc_vm..."
                 $asc_request = Invoke-RestMethod -Uri $asc_uri -Method Get -Headers $asc_requestHeader
+                $asc_request
             }
         Catch {
                 Write-Error $_
-            }
-        Finally {
-                $asc_request
             }
     }
     End {
@@ -1091,29 +1104,22 @@ function Get-ASCLocation {
     (
         # Security API version. By default this uses the $asc_version variable which this module pre-sets. Only specify this if necessary.
         [Parameter(Mandatory=$false)]
-        [string]$Version = $asc_version
+        [string]$Version
     )
+    Show-Warning
+    Set-Context
+    if (!$Version) {$Version = $asc_version}
+    $asc_APIVersion = "?api-version=$Version" #Build version syntax.
+    $asc_endpoint = 'locations' #Set endpoint.
 
-    Begin {
-        Show-Warning
-        Set-Context
-        $asc_endpoint = 'locations' #Set endpoint.
-        $asc_APIVersion = "?api-version=$version" #Build version syntax.
-    }
-    Process {
-            $asc_uri = "https://$asc_url/subscriptions/$asc_subscriptionId/providers/microsoft.Security/$asc_endpoint$asc_APIVersion"
-            Try {
-                    $asc_request = Invoke-RestMethod -Uri $asc_uri -Method Get -Headers $asc_requestHeader
-                }
-            Catch {
-                    Write-Error $_
-                }
-            Finally {
-                    $asc_request.value
-                }
-    }
-    End {
-    }
+    $asc_uri = "https://$asc_url/subscriptions/$asc_subscriptionId/providers/microsoft.Security/$asc_endpoint$asc_APIVersion"
+    Try {
+            $asc_request = Invoke-RestMethod -Uri $asc_uri -Method Get -Headers $asc_requestHeader
+            $asc_request.value
+        }
+    Catch {
+            Write-Error $_
+        }
 }
 <#
 .Synopsis
@@ -1154,29 +1160,22 @@ function Get-ASCSecuritySolutionReferenceData {
     (
         # Security API version. By default this uses the $asc_version variable which this module pre-sets. Only specify this if necessary.
         [Parameter(Mandatory=$false)]
-        [string]$Version = $asc_version
+        [string]$Version
     )
+    Show-Warning
+    Set-Context
+    if (!$Version) {$Version = $asc_version}
+    $asc_APIVersion = "?api-version=$Version" #Build version syntax.
+    $asc_endpoint = 'securitySolutionsReferenceData' #Set endpoint.
 
-    Begin {
-        Show-Warning
-        Set-Context
-        $asc_endpoint = 'securitySolutionsReferenceData' #Set endpoint.
-        $asc_APIVersion = "?api-version=$version" #Build version syntax.
-    }
-    Process {
-        $asc_uri = "https://$asc_url/subscriptions/$asc_subscriptionId/providers/microsoft.Security/$asc_endpoint$asc_APIVersion"
-        Try {
-                $asc_request = Invoke-RestMethod -Uri $asc_uri -Method Get -Headers $asc_requestHeader
-            }
-        Catch {
-                Write-Error $_
-            }
-        Finally {
-                $asc_request.value
-            }
-    }
-    End {
-    }
+    $asc_uri = "https://$asc_url/subscriptions/$asc_subscriptionId/providers/microsoft.Security/$asc_endpoint$asc_APIVersion"
+    Try {
+            $asc_request = Invoke-RestMethod -Uri $asc_uri -Method Get -Headers $asc_requestHeader
+            $asc_redirectUri.value
+        }
+    Catch {
+            Write-Error $_
+        }
 }
 <#
 .Synopsis
@@ -1208,33 +1207,25 @@ function Get-ASCSecuritySolution {
     (
         # Security API version. By default this uses the $asc_version variable which this module pre-sets. Only specify this if necessary.
         [Parameter(Mandatory=$false)]
-        [string]$Version = $asc_version
+        [string]$Version
     )
+    Show-Warning
+    Set-Context
+    $asc_endpoint = 'securitySolutions' #Set endpoint.
+    $asc_APIVersion = "?api-version=$version" #Build version syntax.
 
-    Begin {
-        Show-Warning
-        Set-Context
-        $asc_endpoint = 'securitySolutions' #Set endpoint.
-        $asc_APIVersion = "?api-version=$version" #Build version syntax.
-    }
-    Process {
-        $asc_uri = "https://$asc_url/subscriptions/$asc_subscriptionId/providers/microsoft.Security/$asc_endpoint$asc_APIVersion"
-        Try {
-                $asc_request = Invoke-RestMethod -Uri $asc_uri -Method Get -Headers $asc_requestHeader
-            }
-        Catch {
-                Write-Error $_
-            }
-        Finally {
-                $asc_request.value
-            }
-    }
-    End {
-    }
+    $asc_uri = "https://$asc_url/subscriptions/$asc_subscriptionId/providers/microsoft.Security/$asc_endpoint$asc_APIVersion"
+    Try {
+            $asc_request = Invoke-RestMethod -Uri $asc_uri -Method Get -Headers $asc_requestHeader
+            $asc_request.value
+        }
+    Catch {
+            Write-Error $_
+        }
 }
 <#
 .Synopsis
-Set-ASCProtected Resource.
+Set-ASCProtectedResource
 .DESCRIPTION
 
 .EXAMPLE
@@ -1263,15 +1254,16 @@ function Set-ASCProtectedResource {
 
         # Security API version. By default this uses the $asc_version variable which this module pre-sets. Only specify this if necessary.
         [Parameter(Mandatory=$false)]
-        [string]$Version = $asc_version
+        [string]$Version
     )
 
     Begin {
-        Show-Warning
+        Write-Warning "This cmdlet is in development and may not work properly."
         Set-Context
+        if (!$Version) {$Version = $asc_version}
+        $asc_APIVersion = "?api-version=$Version" #Build version syntax.
         Write-Warning "This cmdlet is currently in development and may not work as expected."
         $asc_endpoint = 'securitySolutions' #Set endpoint.
-        $asc_APIVersion = "?api-version=$version" #Build version syntax.
     }
     Process {
 
@@ -1308,38 +1300,30 @@ function Get-ASCJITAccessPolicy {
     (
         # Security API version. By default this uses the $asc_version variable which this module pre-sets. Only specify this if necessary.
         [Parameter(Mandatory=$false)]
-        [string]$Version = $asc_version
+        [string]$Version
     )
+    Set-Context
+    $asc_endpoint = 'jitNetworkAccessPolicies' #Set endpoint.
+    if (!$Version) {$Version = $asc_version}
+    $asc_APIVersion = "?api-version=$version" #Build version syntax.
 
-    Begin {
-        Set-Context
-        Write-Warning "This cmdlet requires the JIT preview feature."
-       
-        $asc_endpoint = 'jitNetworkAccessPolicies' #Set endpoint.
-        $asc_APIVersion = "?api-version=$version" #Build version syntax.
-    }
-    Process {
-        $asc_uri = "https://$asc_url/subscriptions/$asc_subscriptionId/providers/microsoft.Security/$asc_endpoint$asc_APIVersion"
-        Try {
-                $asc_request = Invoke-RestMethod -Uri $asc_uri -Method Get -Headers $asc_requestHeader
-            }
-        Catch {
-                Write-Error $_
-            }
-        Finally {
-                $asc_request.value
-            }
-    }
-    End {
-    }
+    $asc_uri = "https://$asc_url/subscriptions/$asc_subscriptionId/providers/microsoft.Security/$asc_endpoint$asc_APIVersion"
+    Try {
+            $asc_request = Invoke-RestMethod -Uri $asc_uri -Method Get -Headers $asc_requestHeader
+            $asc_request.value
+        }
+    Catch {
+        if ($_.Exception.Response.StatusCode.Value__ -match 403) {Write-Error "JIT VM Access requires a standard tier subscription. For more info please visit aka.ms/asc-jit" -ErrorAction Stop}
+        else {Write-Error "$_" -ErrorAction Stop}
+        }
 }
 <#
 .Synopsis
 Set-ASCJITAccessPolicy is used to enable or disable Just-in-Time Port Administration on specified VM's.
 .DESCRIPTION
-This cmdlet should be used by Azure Security Center administrators to set a JIT policy for specific virtual machines. Minimum duriation is 5 minutes, maximum duration is 24 hours.    
+This cmdlet should be used by Azure Security Center administrators to set a JIT policy for specific virtual machines. Minimum duriation is 5 minutes, maximum duration is 24 hours.
 .EXAMPLE
-Set-ASCJITAccessPolicy -ResourceGroupName ContosoRG -VM 2016-Nano1 -Version 2016-01-03-alpha -Port 22,3389
+Set-ASCJITAccessPolicy -ResourceGroupName ContosoRG -VM 2016-Nano1 -Port 22,3389
 
 {
     "id":  "/subscriptions/e5d1b86c-3051-44d5-8802-aa65d45a279b/resourceGroups/CxP-Mike/providers/Microsoft.Compute/virtualMachines/2016-Nano1",
@@ -1384,10 +1368,10 @@ function Set-ASCJITAccessPolicy {
         [ValidateSet('TCP','UDP','*')]
         [string]$Protocol="*",
 
-        # Allowed Source IP Address Prefix. (IP Address, CIDR block, or *) Default = * 
+        # Allowed Source IP Address Prefix. (IP Address, CIDR block, or *) Default = *
         [Parameter(Mandatory=$false,
                    ValueFromPipelineByPropertyName=$false)]
-        [string]$AddressPrefix = '*',
+        [string]$AllowedSourceAddressPrefix = '*',
 
         # The maximum allowed number of hours for ports to remain open. Default = 3
         [Parameter(Mandatory=$false,
@@ -1403,10 +1387,12 @@ function Set-ASCJITAccessPolicy {
 
         # Security API version. By default this uses the $asc_version variable which this module pre-sets. Only specify this if necessary.
         [Parameter(Mandatory=$false)]
-        [string]$Version = $asc_version
+        [string]$Version
     )
     Set-Context
+
     $asc_endpoint = 'jitNetworkAccessPolicies' #Set endpoint.
+    if (!$Version) {$Version = $asc_version}
     $asc_APIVersion = "?api-version=$Version" #Build version syntax.
 
     $asc_location = (Get-AzureRMResourceGroup -Name $ResourceGroupName).location
@@ -1425,16 +1411,18 @@ function Set-ASCJITAccessPolicy {
             maxRequestAccessDuration = $Duration
             number = $i
             protocol = $Protocol
-            allowedSourceAddressPrefix = $AddressPrefix
+            allowedSourceAddressPrefix = $AllowedSourceAddressPrefix
         }
     }
+
+    $GARMRG = Get-AzureRmResourceGroup -Name $ResourceGroupName
 
     $Body = @{}
     $Body += @{
         kind = "Basic"
         type = "Microsoft.Security/locations/jitNetworkAccessPolicies"
         name = "default"
-        id = (Get-ASCJITAccessPolicy -Version $Version | where {$_.id -match $ResourceGroupName}).id
+        id = $GARMRG.ResourceId + '/providers/Microsoft.Security/locations/' + $GARMRG.Location + '/jitNetworkAccessPolicies/default'
         properties = @{
             virtualMachines = @(
                     @{
@@ -1450,13 +1438,12 @@ function Set-ASCJITAccessPolicy {
     $asc_uri = "https://$asc_url/subscriptions/$asc_subscriptionId/resourceGroups/$ResourceGroupName/providers/Microsoft.Security/locations/$asc_location/$asc_endpoint/default$asc_APIVersion"
     Try {
             $response = Invoke-RestMethod -Uri $asc_uri -Method Put -Headers $asc_requestHeader -Body $JSON -ContentType "application/json"
+            Write-Warning "JIT Policy for source $AllowedSourceAddressPrefix set on $VM for port(s) $Port with protocol $Protocol for maximum time $MaxRequestHour hours and $MaxRequestMinute minutes."
+            Write-Verbose ($response.properties.virtualMachines | ConvertTo-Json -Depth 3)
         }
     Catch {
-            Write-Error $_
-        }
-    Finally {
-            Write-Warning "JIT Policy for source $AddressPrefix set on $VM for port(s) $Port with protocol $Protocol for maximum time $MaxRequestHour hours and $MaxRequestMinute minutes."
-            Write-Verbose ($response.properties.virtualMachines | ConvertTo-Json -Depth 3)
+            if ($_.Exception.Response.StatusCode.Value__ -match 403) {Write-Error "JIT VM Access requires a standard tier subscription. For more info please visit aka.ms/asc-jit" -ErrorAction Stop}
+            else {Write-Error "$_" -ErrorAction Stop}
         }
 }
 <#
@@ -1518,16 +1505,17 @@ function Invoke-ASCJITAccess {
 
         # Security API version. By default this uses the $asc_version variable which this module pre-sets. Only specify this if necessary.
         [Parameter(Mandatory=$false)]
-        [string]$Version = $asc_version
+        [string]$Version
     )
-    Write-Warning "This cmdlet requires the JIT preview feature."
     Set-Context
-    
+
     $asc_endpoint = 'jitNetworkAccessPolicies' #Set endpoint.
+
+    if (!$Version) {$Version = $asc_version}
     $asc_APIVersion = "?api-version=$Version" #Build version syntax.
 
-    if ($Hours -eq 24 -and $Minutes -ne 0){Write-Error 'You may not specify a length of time longer than 24 hours.'}
-    if ($Minutes -le 4 -and !$Hours){Write-Error 'You may not specify a length of time less than 5 minutes.'}
+    if ($Hours -eq 24 -and $Minutes -ne 0){Write-Error 'You may not specify a length of time longer than 24 hours.' -ErrorAction Stop}
+    if ($Minutes -le 4 -and !$Hours){Write-Error 'You may not specify a length of time less than 5 minutes.' -ErrorAction Stop}
 
     if (!$Hours -and !$Minutes){ $Hours = 3; $Minutes = 0}
 
@@ -1549,19 +1537,19 @@ function Invoke-ASCJITAccess {
             ports = $Port_collection
         })
     }
-    
+
     $JSON = $Body | ConvertTo-Json -Depth 4
-    
+
     $asc_uri = "https://$asc_url/subscriptions/$asc_subscriptionId/resourceGroups/$ResourceGroupName/providers/microsoft.Security/locations/$location/$asc_endpoint/default/Initiate$asc_APIVersion"
- 
+
     Try {
             $asc_request = Invoke-RestMethod -Uri $asc_uri -Method Post -Body $JSON -Headers $asc_requestHeader -ContentType "application/json"
-        }
-    Catch {
-            Write-Error $_
-        }
-    Finally {
             Write-Warning "Specified ports for $VM have been opened for $Hours hours and $Minutes minutes."
             Write-Warning "Ports may take up to 1 minute to open."
+        }
+    Catch {
+            if ($_.Exception.Response.StatusCode.Value__ -match 403) { Write-Error "JIT VM Access requires a Standard tier subscription. For more info please visit aka.ms/asc-jit" -ErrorAction Stop }
+            if ($_.ErrorDetails.Message -match 'subset of the given policy') { Write-Error "One or more of the parameters specified do not match the set JIT policy. Please validate that port(s), duration, and source address prefix match those approved by your administrator." }
+            else { Write-Error "$_" -ErrorAction Stop }
         }
 }
