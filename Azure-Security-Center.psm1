@@ -1398,13 +1398,13 @@ function Set-ASCJITAccessPolicy {
     $asc_location = (Get-AzureRMResourceGroup -Name $ResourceGroupName).location
     $asc_vm_id = (Get-AzureRMVM -ResourceGroupName $ResourceGroupName -Name $VM).Id
 
-
-
+    Try {
+    Write-Verbose "Checking parameters"
     if ($MaxRequestHour -eq 24 -and $MaxRequestMinute){Write-Error 'You may not specify a length of time longer than 24 hours.'}
     if ($MaxRequestMinute -le 4 -and !$MaxRequestHour){Write-Error 'You may not specify a length of time less than 5 minutes.'}
     $Duration = "PT$($MaxRequestHour)H$($MaxRequestMinute)M"
 
-
+    Write-Verbose "Building port collection"
     $Port_collection = @()
     foreach ($i in $Port){
         $Port_collection += @{
@@ -1417,6 +1417,7 @@ function Set-ASCJITAccessPolicy {
 
     $GARMRG = Get-AzureRmResourceGroup -Name $ResourceGroupName
 
+    Write-Verbose "Building request body"
     $Body = @{}
     $Body += @{
         kind = "Basic"
@@ -1433,13 +1434,48 @@ function Set-ASCJITAccessPolicy {
             }
         }
 
-    $JSON = $Body | ConvertTo-Json -Depth 5
+        Write-Verbose "Getting existing JIT Policy"
+        $Cur_Policy = (Get-ASCJITAccessPolicy | where {$_.id -match "/locations/$asc_location" -and $_.id -match "/resourceGroups/$ResourceGroupName"}).properties.virtualMachines
 
-    $asc_uri = "https://$asc_url/subscriptions/$asc_subscriptionId/resourceGroups/$ResourceGroupName/providers/Microsoft.Security/locations/$asc_location/$asc_endpoint/default$asc_APIVersion"
-    Try {
-            $response = Invoke-RestMethod -Uri $asc_uri -Method Put -Headers $asc_requestHeader -Body $JSON -ContentType "application/json"
-            Write-Warning "JIT Policy for source $AllowedSourceAddressPrefix set on $VM for port(s) $Port with protocol $Protocol for maximum time $MaxRequestHour hours and $MaxRequestMinute minutes."
-            Write-Verbose ($response.properties.virtualMachines | ConvertTo-Json -Depth 3)
+        if ($Cur_Policy -eq $null) {
+            Write-Verbose "No policy found"
+            Write-Verbose "Creating new policy"
+            $JSON = $Body | ConvertTo-Json -Depth 10
+        }
+
+        else {
+            Write-Verbose "Policy found"
+            Write-Verbose "Structuring existing policy"
+            $Cur_Body = $Cur_Policy | select kind, type, name, id, properties
+
+            $Cur_Request = @{
+                kind = $Cur_Body.kind
+                type = $Cur_Body.type
+                name = $Cur_Body.name
+                id = $Cur_Body.id
+                properties = @{
+                    virtualMachines = $Cur_Body.properties.virtualMachines
+                }
+            }
+            Write-Verbose "Overwriting settings for $asc_vm_id"
+            $Cur_VM = @()
+            if ($Cur_Policy -match $asc_vm_id){
+                $Cur_Policy = $Cur_Policy | where {$_.id -ne $asc_vm_id}
+            }
+
+            foreach ($i in $Cur_Policy) {$Cur_VM += $i}
+            foreach ($i in $Cur_VM) {$Body.properties.virtualMachines += $i}
+            $JSON = $Body | ConvertTo-Json -Depth 10
+        }
+
+        Write-Verbose $JSON
+
+        $asc_uri = "https://$asc_url/subscriptions/$asc_subscriptionId/resourceGroups/$ResourceGroupName/providers/Microsoft.Security/locations/$asc_location/$asc_endpoint/default$asc_APIVersion"
+
+        $response = Invoke-RestMethod -Uri $asc_uri -Method Put -Headers $asc_requestHeader -Body $JSON -ContentType "application/json"
+        Write-Warning "JIT Policy for source $AllowedSourceAddressPrefix set on $VM for port(s) $Port with protocol $Protocol for maximum time $MaxRequestHour hours and $MaxRequestMinute minutes."
+        Write-Warning "Policy may take up to 1 minute to take effect."
+        Write-Verbose ($response.properties.virtualMachines | ConvertTo-Json -Depth 3)
         }
     Catch {
             if ($_.Exception.Response.StatusCode.Value__ -match 403) {Write-Error "JIT VM Access requires a standard tier subscription. For more info please visit aka.ms/asc-jit" -ErrorAction Stop}
@@ -1515,7 +1551,7 @@ function Invoke-ASCJITAccess {
     $asc_APIVersion = "?api-version=$Version" #Build version syntax.
 
     if ($Hours -eq 24 -and $Minutes -ne 0){Write-Error 'You may not specify a length of time longer than 24 hours.' -ErrorAction Stop}
-    if ($Minutes -le 4 -and !$Hours){Write-Error 'You may not specify a length of time less than 5 minutes.' -ErrorAction Stop}
+    if ($Minutes -le 6 -and !$Hours){Write-Error 'You may not specify a length of time less than 6 minutes.' -ErrorAction Stop}
 
     if (!$Hours -and !$Minutes){ $Hours = 3; $Minutes = 0}
 
