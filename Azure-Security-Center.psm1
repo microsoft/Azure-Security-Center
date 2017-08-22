@@ -52,11 +52,11 @@ function Set-Context {
 
 <#
 .Synopsis
-Build-ASCJSON creates the JSON format needed for Set-ASCPolicy.
+Build-ASCPolicy creates the JSON format needed for Set-ASCPolicy.
 .DESCRIPTION
 When running the command, it will perform a GET request for your existing ASC policy configuraiton and will only update parameters you specify. The command currently has parameters for JIT Port Administration configuration, but the JIT commands are not currently in the module. These will be added later.
 .EXAMPLE
-Build-ASCJSON -Type Policy -PolicyName Default
+Build-ASCPolicy -PolicyName Default
 
 {
 "properties":  {
@@ -109,7 +109,7 @@ Build-ASCJSON -Type Policy -PolicyName Default
 
 The above example simply shows the existing configuration for the specified policy.
 .EXAMPLE
-Build-ASCJSON -Type Policy -PolicyName Default -AllOff -LogCollection Off -SecurityContactEmail "bin@bash.com","bash@bin.com"
+Build-ASCPolicy -PolicyName Default -AllOff -LogCollection Off -SecurityContactEmail "bin@bash.com","bash@bin.com"
 
 {
 "properties":  {
@@ -162,51 +162,15 @@ Build-ASCJSON -Type Policy -PolicyName Default -AllOff -LogCollection Off -Secur
 
 The above example builds a policy that turns all recommendations off and log collection off and changes the security contact to "bin@bash.com" and "bash@bin.com"
 #>
-function Build-ASCJSON {
+function Build-ASCPolicy {
     [CmdletBinding()]
     Param
     (
-        # Type - Specify type of JSON config to build.
-        [Parameter(Mandatory=$true,
-                   ValueFromPipelineByPropertyName=$false,
-                   ParameterSetName='Policy')]
-        [Parameter(Mandatory=$true,
-                   ValueFromPipelineByPropertyName=$false,
-                   ParameterSetName='ProtectedResource')]
-        [ValidateSet('Policy','ProtectedResource')]
-        [string]$Type,
-
         # PolicyName - Specify policy name for configuration.Note: Currently only Default is supported for Policy configurations.
         [Parameter(Mandatory=$true,
                    ValueFromPipelineByPropertyName=$false,
                    ParameterSetName='Policy')]
         [string]$PolicyName,
-
-        # Security Contact Email. You may specify multiple names by comma separating. Example: "foo@bar.com", "hello@world.com"
-        [Parameter(Mandatory=$false,
-                   ValueFromPipelineByPropertyName=$false,
-                   ParameterSetName='Policy')]
-        [string[]]$SecurityContactEmail,
-
-        # Security Contact Phone Number.
-        [Parameter(Mandatory=$false,
-                   ValueFromPipelineByPropertyName=$false,
-                   ParameterSetName='Policy')]
-        [string]$SecurityContactPhone,
-
-        # Security Contact - Send notifications about alerts. This turns on automated notifications for the subscription.
-        [Parameter(Mandatory=$false,
-                   ValueFromPipelineByPropertyName=$false,
-                   ParameterSetName='Policy')]
-        [ValidateSet('true','false')]
-        [string]$SecurityContactNotificationsOn,
-
-        # Security Contact - Send notifications to subscription owner as well.
-        [Parameter(Mandatory=$false,
-                   ValueFromPipelineByPropertyName=$false,
-                   ParameterSetName='Policy')]
-        [ValidateSet('true','false')]
-        [string]$SecurityContactSendToAdminOn,
 
         # All Recommendations On. This turns all ASC recommendation flags to 'On'.
         [Parameter(Mandatory=$false,
@@ -325,37 +289,38 @@ function Build-ASCJSON {
         [ValidateSet('On','Off')]
         [string]$DataCollection,
 
+        # Security Contact Email. You may specify multiple names by comma separating. Example: "foo@bar.com", "hello@world.com"
+        [Parameter(Mandatory=$false,
+                   ValueFromPipelineByPropertyName=$false,
+                   ParameterSetName='Policy')]
+        [string[]]$SecurityContactEmail,
+
+        # Security Contact Phone Number.
+        [Parameter(Mandatory=$false,
+                   ValueFromPipelineByPropertyName=$false,
+                   ParameterSetName='Policy')]
+        [string]$SecurityContactPhone,
+
+        # Security Contact - Send notifications about alerts. This turns on automated notifications for the subscription.
+        [Parameter(Mandatory=$false,
+                   ValueFromPipelineByPropertyName=$false,
+                   ParameterSetName='Policy')]
+        [ValidateSet('true','false')]
+        [string]$SecurityContactNotificationsOn,
+
+        # Security Contact - Send notifications to subscription owner as well.
+        [Parameter(Mandatory=$false,
+                   ValueFromPipelineByPropertyName=$false,
+                   ParameterSetName='Policy')]
+        [ValidateSet('true','false')]
+        [string]$SecurityContactSendToAdminOn,
+
         # Pricing Tier. Specifies the pricing tier for the subscription. Note, setting this to Standard may cause you to incur costs.
         [Parameter(Mandatory=$false,
                    ValueFromPipelineByPropertyName=$false,
                    ParameterSetName='Policy')]
         [ValidateSet('Free','StandardTrial','Standard')]
         [string]$PricingTier,
-
-        # ResourceGroupName
-        [Parameter(Mandatory=$true,
-                   ValueFromPipelineByPropertyName=$false,
-                   ParameterSetName='ProtectedResource')]
-        [string]$ResourceGroupName,
-
-        # SolutionName
-        [Parameter(Mandatory=$true,
-                   ValueFromPipelineByPropertyName=$false,
-                   ParameterSetName='ProtectedResource')]
-        [ValidateSet('Qualys')]
-        [string]$SolutionName,
-
-        # ResourceAzureId
-        [Parameter(Mandatory=$true,
-                   ValueFromPipelineByPropertyName=$false,
-                   ParameterSetName='ProtectedResource')]
-        [string]$ResourceAzureId,
-
-        # TaskId
-        [Parameter(Mandatory=$true,
-                   ValueFromPipelineByPropertyName=$false,
-                   ParameterSetName='ProtectedResource')]
-        [string]$TaskId,
 
         # Security API version. By default this uses the $asc_version variable which this module pre-sets. Only specify this if necessary.
         [Parameter(Mandatory=$false)]
@@ -372,9 +337,6 @@ function Build-ASCJSON {
         # Additional parameter validations and mutual exclusions
         If ($AllOn -and $AllOff) {Throw 'Cannot reconcile app parameters. Only use one of them at a time.'}
         If (($AllOn -or $AllOff) -and ($Patch -or $Baseline -or $AntiMalware -or $DiskEncryption -or $ACLS -or $NSGS -or $WAF -or $SQLAuditing -or $SQLTDE -or $NGFW -or $VulnerabilityAssessment -or $StorageEncryption -or $JITNetworkAccess)) {Throw 'Cannot reconcile app parameters. Do not specify individual properties in addition to AllOn or AllOf.'}
-
-
-        if ($Type -eq 'Policy') {
 
             #Retrieve existing policy and build hashtable
             $a = Get-ASCPolicy -PolicyName $PolicyName
@@ -470,16 +432,6 @@ function Build-ASCJSON {
 
             #Convert hash table to JSON for Set-ASCPolicy cmdlet
             $json_policy | ConvertTo-Json -Depth 3
-                    }
-
-         if ($Type -eq 'ProtectedResource') {
-
-            $json_policy = @{
-            resourceAzureId = $ResourceAzureId
-            taskId = $TaskId
-            }
-
-         }
 
      }#end try block
 
@@ -1556,7 +1508,7 @@ function Invoke-ASCJITAccess {
     if (!$Hours -and !$Minutes){ $Hours = 3; $Minutes = 0}
 
     $location = (Get-AzureRMVM -resourcegroupname $ResourceGroupName -Name $VM).location
-    $endtimeutc = [DateTime]::UtcNow.AddHours($Hours).AddMinutes($Minutes).toString("yyyy-MM-ddTHH:mm:ssZ")
+    $endtimeutc = [DateTime]::UtcNow.AddHours($Hours).AddMinutes($Minutes).toString("yyyy-MM-ddTHH:mm:ssZ", [CultureInfo]::InvariantCulture)
 
     $Port_collection = @()
     foreach ($i in $Port){
