@@ -1508,7 +1508,7 @@ function Invoke-ASCJITAccess {
     if (!$Hours -and !$Minutes){ $Hours = 3; $Minutes = 0}
 
     $location = (Get-AzureRMVM -resourcegroupname $ResourceGroupName -Name $VM).location
-    $endtimeutc = [DateTime]::UtcNow.AddHours($Hours).AddMinutes($Minutes).toString("yyyy-MM-ddTHH:mm:ssZ", [CultureInfo]::InvariantCulture)
+    $endtimeutc = [DateTime]::UtcNow.AddHours($Hours).AddMinutes($Minutes).toString("o", [CultureInfo]::InvariantCulture)
 
     $Port_collection = @()
     foreach ($i in $Port){
