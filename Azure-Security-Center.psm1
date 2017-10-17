@@ -1163,8 +1163,10 @@ function Get-ASCSecuritySolution {
     )
     Show-Warning
     Set-Context
-    $asc_endpoint = 'securitySolutions' #Set endpoint.
-    $asc_APIVersion = "?api-version=$version" #Build version syntax.
+    if (!$Version) {$Version = $asc_version}
+    $asc_APIVersion = "?api-version=$Version" #Build version syntax.
+
+    $asc_endpoint = 'securitySolutions' #Set endpoint
 
     $asc_uri = "https://$asc_url/subscriptions/$asc_subscriptionId/providers/microsoft.Security/$asc_endpoint$asc_APIVersion"
     Try {
