@@ -1177,6 +1177,189 @@ function Get-ASCSecuritySolution {
             Write-Error $_
         }
 }
+
+<#
+.Synopsis
+New-ASCQualysVASolutionConfiguration creates a Qualys VA Security Solution configuration.
+.DESCRIPTION
+Creates the JSON format needed for Set-ASCSecuritySolution to work with a Qualys VA Security Solution.
+.EXAMPLE
+New-ASCQualysVASolutionConfiguration -LicenseCode "License code supplied by Qualys" -PublicKey "Public Key supplied by Qualys" -AutoUpdate $true
+
+{
+    "Properties":  {
+                       "Template":  "qualys.qualysAgent",
+                       "ProvisioningParameters":  "{\r\n
+\"licenseCode\": \"License code supplied by Qualys\",\r\n
+\"publicKey\": \"Public Key supplied by Qualys\",\r\n
+\"autoUpdate\":  true\r\n}"
+                   }
+}
+#>
+function New-ASCQualysVASolutionConfiguration {
+    [CmdletBinding()]
+    Param
+    (
+        # LicenseCode - Specify license code for configuration.
+        [Parameter(Mandatory=$true,
+                   ValueFromPipelineByPropertyName=$false,
+                   ParameterSetName='QualysVA')]
+        [string]$LicenseCode,
+
+        # PublicKey - Specify Public Key for configuration.
+        [Parameter(Mandatory=$true,
+                   ValueFromPipelineByPropertyName=$false,
+                   ParameterSetName='QualysVA')]
+        [string]$PublicKey,
+
+		# AutoUpdate - deploys to VMs without prompting
+        [Parameter(Mandatory=$false,
+                   ValueFromPipelineByPropertyName=$false,
+                   ParameterSetName='QualysVA')]
+        [bool]$AutoUpdate,
+
+        # Security API version. By default this uses the $asc_version variable which this module pre-sets. Only specify this if necessary.
+        [Parameter(Mandatory=$false)]
+        [string]$Version
+    )
+
+    Begin {
+        Show-Warning
+        Set-Context
+        if (!$Version) {$Version = $asc_version}
+        $asc_APIVersion = "?api-version=$Version" #Build version syntax.
+
+        try{
+
+		$provisioning = @{
+		licenseCode = $LicenseCode
+		publicKey = $PublicKey
+		autoUpdate = $AutoUpdate
+		}
+
+		$config = @{
+		Properties = @{
+		Template = "qualys.qualysAgent"
+		ProvisioningParameters = ($provisioning | ConvertTo-Json)
+		}
+		}
+
+		#Convert hash table to JSON
+		$config | ConvertTo-Json -Depth 3
+
+     }#end try block
+
+     catch{
+        Write-Error $_
+     }
+    }#end begin block
+    Process {
+    }
+    End {
+    }
+}
+
+<#
+.Synopsis
+Set-ASCSecuritySolution
+.DESCRIPTION
+Writes a Security Solution to the current subscription.
+.EXAMPLE
+Set-ASCSecuritySolution -SolutionName "Va1" -ResourceGroupName "Rg" -JSON (New-ASCQualysVASolutionConfiguration -LicenseCode "License code supplied by Qualys" -PublicKey "Public Key supplied by Qualys" -AutoUpdate $true)
+#>
+function Set-ASCSecuritySolution {
+	[CmdletBinding()]
+    Param
+    (
+        # The name of the security solution
+        [Parameter(Mandatory=$true,
+                   ValueFromPipelineByPropertyName=$false,
+                   Position=0)]
+        [String]$SolutionName,
+
+        # The name of the resource group of the security solution
+        [Parameter(Mandatory=$true,
+                   ValueFromPipelineByPropertyName=$false,
+                   Position=1)]
+        [String]$ResourceGroupName,
+
+        # The configuration as JSON.
+        [Parameter(Mandatory=$true,
+                   ValueFromPipelineByPropertyName=$false)]
+        [string]$JSON,
+
+        # Security API version. By default this uses the $asc_version variable which this module pre-sets. Only specify this if necessary.
+        [Parameter(Mandatory=$false)]
+        [string]$Version
+    )
+    Show-Warning
+    Set-Context
+
+	$asc_location = (Get-ASCLocation $Version).properties.homeRegionName
+
+    if (!$Version) {$Version = $asc_version}
+    $asc_APIVersion = "?api-version=$Version" #Build version syntax.
+
+    $asc_endpoint = 'securitySolutions' #Set endpoint.
+
+	$asc_uri = "https://$asc_url/subscriptions/$asc_subscriptionId/resourceGroups/$ResourceGroupName/providers/microsoft.Security/locations/$asc_location/$asc_endpoint/$SolutionName$asc_APIVersion"
+
+	Try {
+            $asc_request = Invoke-RestMethod -Uri $asc_uri -Method Put -Headers $asc_requestHeader -Body $JSON -UseBasicParsing -ContentType "application/json"
+            $asc_request.value
+        }
+    Catch {
+            Write-Error $_
+        }
+}
+
+<#
+.Synopsis
+Remove-ASCSecuritySolution
+.DESCRIPTION
+Removes an existing Security Solution.
+.EXAMPLE
+Remove-ASCSecuritySolution -SolutionName "Va1" -ResourceGroupName "Rg"
+#>
+function Remove-ASCSecuritySolution {
+	[CmdletBinding()]
+    Param
+    (
+        # The name of the security solution
+        [Parameter(Mandatory=$true,
+                   ValueFromPipelineByPropertyName=$false,
+                   Position=0)]
+        [String]$SolutionName,
+
+        # The name of the resource group of the security solution
+        [Parameter(Mandatory=$true,
+                   ValueFromPipelineByPropertyName=$false,
+                   Position=1)]
+        [String]$ResourceGroupName,
+
+        # Security API version. By default this uses the $asc_version variable which this module pre-sets. Only specify this if necessary.
+        [Parameter(Mandatory=$false)]
+        [string]$Version
+    )
+    Show-Warning
+    Set-Context
+
+	$asc_location = (Get-ASCLocation $Version).name
+
+    if (!$Version) {$Version = $asc_version}
+    $asc_APIVersion = "?api-version=$Version" #Build version syntax.
+
+    $asc_endpoint = 'securitySolutions' #Set endpoint.
+
+    $asc_uri = "https://$asc_url/subscriptions/$asc_subscriptionId/resourceGroups/$ResourceGroupName/providers/microsoft.Security/locations/$asc_location/$asc_endpoint/$SolutionName$asc_APIVersion"
+    Try {
+            $asc_request = Invoke-RestMethod -Uri $asc_uri -Method Delete -Headers $asc_requestHeader
+            $asc_request.value
+        }
+    Catch {
+            Write-Error $_
+        }
+}
 <#
 .Synopsis
 Set-ASCProtectedResource
