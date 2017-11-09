@@ -408,7 +408,7 @@ function Build-ASCPolicy {
             If ($SQLTDE){$json_policy.properties.recommendations.sqlTde = $SQLTDE}
             If ($NGFW){$json_policy.properties.recommendations.ngfw = $NGFW}
             If ($VulnerabilityAssessment){$json_policy.properties.recommendations.vulnerabilityAssessment = $VulnerabilityAssessment}
-            If ($StorageEncryption){$json_policy.properties.recommendations = $StorageEncryption}
+            If ($StorageEncryption){$json_policy.properties.recommendations.storageEncryption = $StorageEncryption}
             If ($JITNetworkAccess){$json_policy.properties.recommendations.jitNetworkAccess = $JITNetworkAccess}
             If ($ApplicationWhitelisting){$json_policy.properties.recommendations.appWhitelisting = $ApplicationWhitelisting}
 
@@ -523,21 +523,8 @@ function Get-ASCPolicy {
                     }
             }
 
-        If ($PolicyName -and !$Baseline) {
+        If ($PolicyName) {
                 $asc_uri = "https://$asc_url/subscriptions/$asc_subscriptionId/providers/microsoft.Security/$asc_endpoint/$PolicyName$asc_APIVersion"
-                Try {
-                        Write-Verbose "Retrieving data for $PolicyName..."
-                        $asc_request = Invoke-RestMethod -Uri $asc_uri -Method Get -Headers $asc_requestHeader
-                    }
-                Catch {
-                        Write-Error $_
-                    }
-                Finally {
-                        $asc_request
-                    }
-            }
-        If ($PolicyName -and $Baseline) {
-                $asc_uri = "https://$asc_url/subscriptions/$asc_subscriptionId/providers/microsoft.Security/$asc_endpoint/$PolicyName/baselineConfigurations$asc_APIVersion"
                 Try {
                         Write-Verbose "Retrieving data for $PolicyName..."
                         $asc_request = Invoke-RestMethod -Uri $asc_uri -Method Get -Headers $asc_requestHeader
