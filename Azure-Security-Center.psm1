@@ -523,8 +523,21 @@ function Get-ASCPolicy {
                     }
             }
 
-        Else {
+        If ($PolicyName -and !$Baseline) {
                 $asc_uri = "https://$asc_url/subscriptions/$asc_subscriptionId/providers/microsoft.Security/$asc_endpoint/$PolicyName$asc_APIVersion"
+                Try {
+                        Write-Verbose "Retrieving data for $PolicyName..."
+                        $asc_request = Invoke-RestMethod -Uri $asc_uri -Method Get -Headers $asc_requestHeader
+                    }
+                Catch {
+                        Write-Error $_
+                    }
+                Finally {
+                        $asc_request
+                    }
+            }
+        If ($PolicyName -and $Baseline) {
+                $asc_uri = "https://$asc_url/subscriptions/$asc_subscriptionId/providers/microsoft.Security/$asc_endpoint/$PolicyName/baselineConfigurations$asc_APIVersion"
                 Try {
                         Write-Verbose "Retrieving data for $PolicyName..."
                         $asc_request = Invoke-RestMethod -Uri $asc_uri -Method Get -Headers $asc_requestHeader
