@@ -109,7 +109,7 @@ Build-ASCPolicy -PolicyName Default
 
 The above example simply shows the existing configuration for the specified policy.
 .EXAMPLE
-Build-ASCPolicy -PolicyName Default -AllOff -LogCollection Off -SecurityContactEmail "bin@bash.com","bash@bin.com"
+Build-ASCPolicy -PolicyName Default -AllOff -DataCollection Off -SecurityContactEmail "bin@bash.com","bash@bin.com"
 
 {
 "properties":  {
@@ -936,85 +936,6 @@ function Set-ASCAlert {
         If ($Activate -and $Dismiss) {
                 Write-Warning "You may not specify -Activate and -Dismiss at the same time."
                 break
-            }
-    }
-    End {
-    }
-}
-<#
-.Synopsis
-Get-ASCDataCollection
-.DESCRIPTION
-Retrieves data collection information around the specified resource.
-.EXAMPLE
-Get-ASCDataCollection -ComputeType Compute -ResourceGroup CXP-MIKE -VM "2012R2-DC1" | fl -Force
-
-id         : /subscriptions/6b1ceacd-5921-4780-8f96-2078ad96fd96/resourceGroups/CXP-MIKE/providers/Microsoft.Compute/virtualMachines/2012R2-DC1//providers/Micros
-                oft.Security/securityStatuses/Patch
-name       : Patch
-type       : Microsoft.Security/securityStatuses
-properties : @{missingPatches=System.Object[]; name=PatchSecurityDataProperties; type=Patch}
-
-id         : /subscriptions/6b1ceacd-5921-4780-8f96-2078ad96fd96/resourceGroups/CXP-MIKE/providers/Microsoft.Compute/virtualMachines/2012R2-DC1//providers/Micros
-                oft.Security/securityStatuses/Baseline
-name       : Baseline
-type       : Microsoft.Security/securityStatuses
-properties : @{failedBaselineRules=System.Object[]; name=BaselineSecurityDataProperties; type=Baseline}
-
-id         : /subscriptions/6b1ceacd-5921-4780-8f96-2078ad96fd96/resourceGroups/CXP-MIKE/providers/Microsoft.Compute/virtualMachines/2012R2-DC1//providers/Micros
-                oft.Security/securityStatuses/Antimalware
-name       : Antimalware
-type       : Microsoft.Security/securityStatuses
-properties : @{antimalwareScenarios=System.Object[]; name=AntimalwareSecurityDataProperties; type=Antimalware}
-
-
-The above example retrieves data collection information for the specified resource.
-#>
-function Get-ASCDataCollection {
-    [CmdletBinding()]
-    Param
-    (
-        # Specify compute type. 'Compute' or 'Classic Compute'
-        [Parameter(Mandatory=$true,
-                   ValueFromPipelineByPropertyName=$false)]
-        [ValidateSet('Compute','Classic Compute')]
-        [string]$ComputeType,
-
-        # Specify resource group.
-        [Parameter(Mandatory=$true,
-                   ValueFromPipelineByPropertyName=$false)]
-        [string]$ResourceGroup,
-
-        # Specify VM name.
-        [Parameter(Mandatory=$true,
-                   ValueFromPipelineByPropertyName=$false)]
-        [string]$VM,
-
-        # Security API version. By default this uses the $asc_version variable which this module pre-sets. Only specify this if necessary.
-        [Parameter(Mandatory=$false)]
-        [string]$Version
-    )
-
-    Begin {
-        Show-Warning
-        Set-Context
-        if (!$Version) {$Version = $asc_version}
-        $asc_APIVersion = "?api-version=$Version" #Build version syntax.
-        $asc_endpoint = 'dataCollectionResults' #Set endpoint.
-
-        $asc_resourceGroup = $ResourceGroup
-        $asc_compute = $ComputeType
-        $asc_vm = $VM
-    }
-    Process {
-        $asc_uri = "https://$asc_url/subscriptions/$asc_subscriptionId/resourceGroups/$asc_resourceGroup/providers/microsoft.$asc_compute/virtualMachines/$asc_vm/providers/microsoft.Security/$asc_endpoint$asc_APIVersion"
-        Try {
-                Write-Verbose "Retrieving data for $asc_vm..."
-                $asc_request = Invoke-RestMethod -Uri $asc_uri -Method Get -Headers $asc_requestHeader
-                $asc_request
-            }
-        Catch {
-                Write-Error $_
             }
     }
     End {
