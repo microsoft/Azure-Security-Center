@@ -1092,15 +1092,17 @@ New-ASCQualysVASolutionConfiguration creates a Qualys VA Security Solution confi
 .DESCRIPTION
 Creates the JSON format needed for Set-ASCSecuritySolution to work with a Qualys VA Security Solution.
 .EXAMPLE
-New-ASCQualysVASolutionConfiguration -LicenseCode "License code supplied by Qualys" -PublicKey "Public Key supplied by Qualys" -AutoUpdate $true
+New-ASCQualysVASolutionConfiguration -LicenseCode "License code supplied by Qualys" -PublicKey "Public Key supplied by Qualys" -AutoUpdate $true -Location "centralus"
 
 {
     "Properties":  {
                        "Template":  "qualys.qualysAgent",
-                       "ProvisioningParameters":  "{\r\n
-\"licenseCode\": \"License code supplied by Qualys\",\r\n
-\"publicKey\": \"Public Key supplied by Qualys\",\r\n
-\"autoUpdate\":  true\r\n}"
+                       "ProvisioningParameters":  {
+                                                      "licenseCode":  "License code supplied by Qualys",
+                                                      "publicKey":  "Public Key supplied by Qualys",
+                                                      "autoUpdate":  true
+                                                  },
+                       "Location":  "centralus"
                    }
 }
 #>
@@ -1126,6 +1128,10 @@ function New-ASCQualysVASolutionConfiguration {
                    ParameterSetName='QualysVA')]
         [bool]$AutoUpdate,
 
+        # Location - Specify where the solution is geographically located. (Ex. centralus)
+        [Parameter(Mandatory=$true)]
+        [string]$Location,
+
         # Security API version. By default this uses the $asc_version variable which this module pre-sets. Only specify this if necessary.
         [Parameter(Mandatory=$false)]
         [string]$Version
@@ -1145,15 +1151,16 @@ function New-ASCQualysVASolutionConfiguration {
 		autoUpdate = $AutoUpdate
 		}
 
-		$config = @{
-		Properties = @{
-		Template = "qualys.qualysAgent"
-		ProvisioningParameters = ($provisioning | ConvertTo-Json)
-		}
+        $config = @{
+            Properties = @{
+            Location = $Location
+            Template = "qualys.qualysAgent"
+            ProvisioningParameters = $provisioning
+            }
 		}
 
 		#Convert hash table to JSON
-		$config | ConvertTo-Json -Depth 3
+		$config | ConvertTo-Json -Depth 4
 
      }#end try block
 
