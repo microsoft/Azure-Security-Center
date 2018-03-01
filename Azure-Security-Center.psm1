@@ -1155,7 +1155,7 @@ function New-ASCQualysVASolutionConfiguration {
             Properties = @{
             Location = $Location
             Template = "qualys.qualysAgent"
-            ProvisioningParameters = $provisioning
+            ProvisioningParameters = ($provisioning |  ConvertTo-Json)
             }
 		}
 

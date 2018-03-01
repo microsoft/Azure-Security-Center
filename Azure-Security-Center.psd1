@@ -12,7 +12,7 @@
 RootModule = 'Azure-Security-Center.psm1'
 
 # Version number of this module.
-ModuleVersion = '0.0.20'
+ModuleVersion = '0.0.21'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
