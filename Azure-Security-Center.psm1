@@ -546,11 +546,11 @@ Set-ASCPolicy is used to update the current protection policy for your active su
 .DESCRIPTION
 This cmdlet currently only works for the default policy in your active subscription. To change your active subscription either re-run Get-ASCCredential and select the desired subscription from the list, or run ($asc_subscriptionId = <your subscription id>) to change the global variable used by this module.
 .EXAMPLE
-Set-ASCPolicy -PolicyName default -JSON (Build-ASCJSON -Policy -DataCollection On -SecurityContactEmail hello@world.com, bin@bash.com)
+Set-ASCPolicy -PolicyName default -JSON (Build-ASCPolicy -PolicyName default -DataCollection On -SecurityContactEmail hello@world.com, bin@bash.com" -PricingTier Standard -SecurityContactNotificationsOn true)
 
-The above example uses the Set-ASCPolicy cmdlet against the default policy for the active subscriptionId and passes in the JSON configuration by running Build-ASCJSON within parentheses.
+The above example uses the Set-ASCPolicy cmdlet against the default policy for the active subscriptionId and passes in the JSON configuration by running Build-ASCPolicy within parentheses.
 
-The Build-ASCJSON parameters specified will turn on data collection and replace the existing security contact email addresses with two new addresses.
+The Build-ASCPolicy parameters specified will turn on data collection and replace the existing security contact email addresses with two new addresses.
 
 The command should return a StatusCode: 200 (OK)
 
